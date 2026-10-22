@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { firebaseDb } from '../services/firebase.js';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
@@ -115,8 +115,33 @@ const successRate = computed(() => {
   return Math.round((valid / transactions.value.length) * 100);
 });
 
-const fetchPayments = async () => {
-  loading.value = true;
+const PAYMENTS_CACHE_KEY = 'koroko_payments_cache';
+const PAYMENTS_CACHE_TIME_KEY = 'koroko_payments_cache_time';
+const CACHE_TTL_MS = 60 * 1000; // 1 minute fresh cache
+
+let refreshTimer = null;
+
+const fetchPayments = async (force = false) => {
+  // 1. Instant Cache Load
+  const cached = localStorage.getItem(PAYMENTS_CACHE_KEY);
+  const cacheTime = Number(localStorage.getItem(PAYMENTS_CACHE_TIME_KEY) || 0);
+  const isCacheFresh = Date.now() - cacheTime < CACHE_TTL_MS;
+
+  if (cached && !force) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        transactions.value = parsed;
+        loading.value = false;
+        if (isCacheFresh) return; // Keep fast, background will refresh on interval
+      }
+    } catch (e) {}
+  }
+
+  if (transactions.value.length === 0) {
+    loading.value = true;
+  }
+
   try {
     const list = [];
 
@@ -165,7 +190,11 @@ const fetchPayments = async () => {
       console.warn('[Backend Razorpay Payments]', be.message);
     }
 
-    transactions.value = list;
+    if (list.length > 0) {
+      transactions.value = list;
+      localStorage.setItem(PAYMENTS_CACHE_KEY, JSON.stringify(list));
+      localStorage.setItem(PAYMENTS_CACHE_TIME_KEY, String(Date.now()));
+    }
   } catch (err) {
     console.warn('Payments fetch error:', err.message);
   } finally {
@@ -175,6 +204,14 @@ const fetchPayments = async () => {
 
 onMounted(() => {
   fetchPayments();
+  // Auto-refresh every 60 seconds minimal background sync
+  refreshTimer = setInterval(() => {
+    fetchPayments(true);
+  }, 60000);
+});
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer);
 });
 
 const initiateRefund = (tx) => {

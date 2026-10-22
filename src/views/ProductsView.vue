@@ -29,6 +29,9 @@
       </div>
 
       <div class="sync-actions-group">
+        <router-link to="/deleted-products" class="btn-deleted-page font-tech">
+          DELETED ARCHIVE ({{ adminStore.deletedProducts.length }})
+        </router-link>
         <button class="btn-sync-clean font-tech" @click="refreshCatalog">
           SYNC CATALOG
         </button>
@@ -140,7 +143,7 @@
                 </span>
               </td>
               <td>
-                <span class="badge" :class="product.active ? 'badge-emerald' : 'badge-amber'">
+                <span class="status-pill font-tech" :class="product.active ? 'live' : 'delisted'">
                   {{ product.active ? 'LIVE ON STORE' : 'DELISTED' }}
                 </span>
               </td>
@@ -151,7 +154,7 @@
                 <button class="toggle-btn font-tech" @click="toggleProductStatus(product)">
                   {{ product.active ? 'DELIST' : 'ACTIVATE' }}
                 </button>
-                <button class="delete-btn font-tech" @click="deleteProduct(product)" title="Remove permanently">
+                <button class="delete-btn font-tech" @click="deleteProduct(product)" title="Move to deleted archive">
                   DELETE
                 </button>
               </td>
@@ -165,7 +168,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { adminStore } from '../state/store.js';
+import { adminStore, saveDeletedProducts } from '../state/store.js';
 import { KOROKO_CATEGORIES } from '../data/categories.js';
 
 const categories = ref(KOROKO_CATEGORIES);
@@ -253,11 +256,10 @@ const toggleProductStatus = (product) => {
 };
 
 const deleteProduct = async (product) => {
-  if (confirm(`Permanently remove "${product.title}" (${product.id}) from Koroko store and admin catalog?`)) {
+  if (confirm(`Move "${product.title}" (${product.id}) to Deleted Products Archive? You can restore it anytime.`)) {
     try {
-      const backendUrl = import.meta.env.VITE_API_URL 
-        ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/real-data` 
-        : '/api/real-data';
+      const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+      const backendUrl = isLocal ? 'https://admin.koroko.in/api/real-data' : '/api/real-data';
 
       await fetch(backendUrl, {
         method: 'POST',
@@ -271,9 +273,12 @@ const deleteProduct = async (product) => {
 
     const idx = adminStore.products.findIndex(p => p.id === product.id);
     if (idx !== -1) {
-      adminStore.products.splice(idx, 1);
+      const removed = adminStore.products.splice(idx, 1)[0];
+      removed.deletedAt = new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+      adminStore.deletedProducts.unshift(removed);
+      saveDeletedProducts();
     }
-    alert(`"${product.title}" deleted from Koroko store catalog!`);
+    alert(`"${product.title}" moved to Deleted Archive!`);
   }
 };
 </script>
@@ -419,6 +424,7 @@ const deleteProduct = async (product) => {
 
 .luxury-table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;
@@ -666,6 +672,51 @@ const deleteProduct = async (product) => {
   width: 100%;
 }
 
+.btn-deleted-page {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-deleted-page:hover {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: var(--bg-surface);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.status-pill.live {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.status-pill.delisted {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .push-store-btn {
   background: #ffffff;
   color: #000000;
@@ -680,5 +731,35 @@ const deleteProduct = async (product) => {
 }
 .push-store-btn:hover {
   background: #34d399;
+}
+
+.toggle-btn {
+  background: #1e1e24;
+  border: 1px solid #3f3f46;
+  color: #d4d4d8;
+  font-size: 10.5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toggle-btn:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.delete-btn {
+  background: transparent;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+  font-size: 10.5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.delete-btn:hover {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: #fb7185;
 }
 </style>

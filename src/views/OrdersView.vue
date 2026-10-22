@@ -3,7 +3,6 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">ORDERS MANAGEMENT</h1>
-        <p class="page-subtitle">Inspect customer orders, update fulfillment states, or trigger manual dispatch to Printrove</p>
       </div>
 
       <div class="header-filters">
@@ -243,6 +242,7 @@ const dispatchToVendor = (order) => {
 
 .luxury-table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;

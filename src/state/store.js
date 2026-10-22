@@ -42,17 +42,41 @@ export const adminStore = reactive({
     }
   ],
 
-  // Real Customer Orders fetched from Firestore / Printrove
-  orders: [],
+  // Real Customer Orders fetched from Firestore / Printrove (cached in localStorage)
+  orders: JSON.parse(localStorage.getItem('koroko_orders_cache') || '[]'),
 
-  // Real Products fetched from Printrove API
-  products: []
+  // Real Products fetched from Printrove API (cached in localStorage)
+  products: JSON.parse(localStorage.getItem('koroko_products_cache') || '[]'),
+
+  // Deleted / Delisted Archive Products
+  deletedProducts: JSON.parse(localStorage.getItem('koroko_deleted_products') || '[]')
 });
 
+export function saveDeletedProducts() {
+  localStorage.setItem('koroko_deleted_products', JSON.stringify(adminStore.deletedProducts));
+}
+
+const STORE_CACHE_TIME_KEY = 'koroko_store_cache_time';
+const STORE_CACHE_TTL = 60 * 1000; // 60s cache TTL
+
 /**
- * Fetch real live products and orders from Firebase Firestore + Vendor API
+ * Fetch real live products and orders from Firebase Firestore + Vendor API with caching
  */
-export async function syncRealData() {
+export async function syncRealData(force = false) {
+  const lastSyncTime = Number(localStorage.getItem(STORE_CACHE_TIME_KEY) || 0);
+  const isFresh = Date.now() - lastSyncTime < STORE_CACHE_TTL;
+
+  // If cache is fresh and we already have cached data, avoid redundant network load
+  if (!force && isFresh && adminStore.products.length > 0 && adminStore.orders.length > 0) {
+    adminStore.metrics.catalogItems = adminStore.products.length;
+    adminStore.metrics.activeOrders = adminStore.orders.length;
+    adminStore.metrics.pendingFulfillment = adminStore.orders.filter(o => 
+      o.fulfillmentStatus === 'PENDING_VENDOR' || o.fulfillmentStatus === 'PROCESSING' || o.fulfillmentStatus === 'PENDING'
+    ).length;
+    adminStore.metrics.totalRevenue = adminStore.orders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+    return;
+  }
+
   adminStore.loading = true;
   try {
     const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -66,6 +90,7 @@ export async function syncRealData() {
         if (prodData.success && Array.isArray(prodData.products) && prodData.products.length > 0) {
           adminStore.products = prodData.products;
           adminStore.metrics.catalogItems = prodData.products.length;
+          localStorage.setItem('koroko_products_cache', JSON.stringify(prodData.products));
         }
       }
     } catch (pe) {
@@ -129,6 +154,10 @@ export async function syncRealData() {
     });
 
     adminStore.orders = Array.from(orderMap.values());
+    if (adminStore.orders.length > 0) {
+      localStorage.setItem('koroko_orders_cache', JSON.stringify(adminStore.orders));
+    }
+    localStorage.setItem(STORE_CACHE_TIME_KEY, String(Date.now()));
     adminStore.metrics.activeOrders = adminStore.orders.length;
     adminStore.metrics.pendingFulfillment = adminStore.orders.filter(o => 
       o.fulfillmentStatus === 'PENDING_VENDOR' || o.fulfillmentStatus === 'PROCESSING' || o.fulfillmentStatus === 'PENDING'

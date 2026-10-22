@@ -10,6 +10,7 @@ import PaymentsView from '../views/PaymentsView.vue';
 import DesignUploadView from '../views/DesignUploadView.vue';
 import PricingView from '../views/PricingView.vue';
 import LoginView from '../views/LoginView.vue';
+import DeletedProductsView from '../views/DeletedProductsView.vue';
 
 const routes = [
   {
@@ -22,6 +23,12 @@ const routes = [
     path: '/products',
     name: 'Products',
     component: ProductsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/deleted-products',
+    name: 'DeletedProducts',
+    component: DeletedProductsView,
     meta: { requiresAuth: true }
   },
   {

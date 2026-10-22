@@ -761,13 +761,22 @@ const handleLogout = async () => {
     display: flex;
   }
 
-  .admin-content-view {
-    padding: 16px 14px 80px 14px;
-  }
-
   .admin-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
     padding: 10px 14px;
     gap: 10px;
+    z-index: 998;
+    background: rgba(10, 10, 14, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .admin-content-view {
+    padding: 70px 14px 80px 14px;
   }
 
   .topbar-brand {
