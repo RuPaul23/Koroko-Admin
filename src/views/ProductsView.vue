@@ -374,7 +374,19 @@ const deleteProduct = async (product) => {
   align-items: center;
   gap: 18px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+.circles-row::-webkit-scrollbar {
+  height: 4px;
+}
+.circles-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+.circles-row::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
 .circle-item {
   display: flex;

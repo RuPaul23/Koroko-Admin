@@ -97,44 +97,83 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { firebaseDb } from '../services/firebase.js';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 const transactions = ref([]);
 const loading = ref(true);
 
 const totalCapturedAmount = computed(() => {
   return transactions.value
-    .filter(t => t.status === 'captured' || t.status === 'paid')
+    .filter(t => t.status === 'captured' || t.status === 'paid' || t.status === 'COMPLETED' || t.status === 'SUCCESS')
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 });
 
 const averageOrderValue = computed(() => {
-  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid');
+  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid' || t.status === 'COMPLETED' || t.status === 'SUCCESS');
   if (valid.length === 0) return 0;
   return Math.round(totalCapturedAmount.value / valid.length);
 });
 
 const successRate = computed(() => {
   if (transactions.value.length === 0) return 100;
-  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid').length;
+  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid' || t.status === 'COMPLETED' || t.status === 'SUCCESS').length;
   return Math.round((valid / transactions.value.length) * 100);
 });
 
 const fetchPayments = async () => {
   loading.value = true;
   try {
-    const backendUrl = import.meta.env.VITE_API_URL 
-      ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/real-data` 
-      : '/api/real-data';
+    const list = [];
 
-    const res = await fetch(`${backendUrl}?type=payments`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && Array.isArray(data.payments) && data.payments.length > 0) {
-        transactions.value = data.payments;
+    // 1. Fetch from Firestore Master Payments Collection
+    if (firebaseDb) {
+      try {
+        const payRef = collection(firebaseDb, 'payments');
+        const q = query(payRef, orderBy('createdAt', 'desc'), limit(50));
+        const snap = await getDocs(q);
+        snap.forEach(docSnap => {
+          const p = docSnap.data();
+          list.push({
+            id: p.id || docSnap.id,
+            customer: p.customer?.name || p.userEmail || 'Customer',
+            email: p.customer?.email || p.userEmail || '',
+            phone: p.customer?.phone || '',
+            vpa: p.method || 'Razorpay UPI',
+            orderId: p.orderId || docSnap.id,
+            method: (p.method || 'UPI').toUpperCase(),
+            amount: Number(p.amount) || 0,
+            status: (p.status || 'captured').toLowerCase(),
+            date: p.createdAt ? new Date(p.createdAt).toLocaleString('en-IN') : new Date().toISOString()
+          });
+        });
+      } catch (fe) {
+        console.warn('[Firestore Payments]', fe.message);
       }
     }
+
+    // 2. Fetch from Razorpay API backend proxy
+    try {
+      const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+      const backendUrl = isLocal ? 'https://admin.koroko.in/api/real-data' : '/api/real-data';
+      const res = await fetch(`${backendUrl}?type=payments`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.payments)) {
+          data.payments.forEach(p => {
+            if (!list.some(existing => existing.id === p.id)) {
+              list.push(p);
+            }
+          });
+        }
+      }
+    } catch (be) {
+      console.warn('[Backend Razorpay Payments]', be.message);
+    }
+
+    transactions.value = list;
   } catch (err) {
-    console.warn('Payments fetch fallback:', err.message);
+    console.warn('Payments fetch error:', err.message);
   } finally {
     loading.value = false;
   }

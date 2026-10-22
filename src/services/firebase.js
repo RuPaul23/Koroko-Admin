@@ -12,6 +12,7 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAz9m4HEBLaMLgwmNCg3n_Q84zz8YX8y1g",
@@ -25,6 +26,7 @@ export const firebaseConfig = {
 
 let app = null;
 let auth = null;
+export let firebaseDb = null;
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
@@ -35,6 +37,7 @@ if (getApps().length === 0) {
 }
 
 auth = getAuth(app);
+firebaseDb = getFirestore(app);
 
 export const authState = reactive({
   user: null,

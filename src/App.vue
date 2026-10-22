@@ -110,41 +110,57 @@
     <!-- Main Container -->
     <div class="admin-main">
       <header v-if="!isLoginPage" class="admin-topbar">
-        <!-- Mobile Brand Logo Header -->
-        <div class="topbar-left">
-          <div class="mobile-brand-title">
-            <span class="mobile-logo font-display">K</span>
-            <span class="mobile-brand-name font-display">KOROKO ADMIN</span>
-          </div>
-
-          <!-- Top Navigation Tabs (Dashboard, Product, Order, Pending, Earning) -->
-          <div class="topbar-nav-links">
-            <router-link to="/" class="top-nav-btn font-tech" active-class="active" exact>
-              DASHBOARD
-            </router-link>
-            <router-link to="/products" class="top-nav-btn font-tech" active-class="active">
-              PRODUCT ({{ adminStore.products.length }})
-            </router-link>
-            <router-link to="/orders" class="top-nav-btn font-tech" active-class="active">
-              ORDER ({{ adminStore.orders.length }})
-            </router-link>
-            <router-link to="/pending" class="top-nav-btn font-tech" active-class="active">
-              PENDING
-              <span v-if="pendingCount > 0" class="top-pill-badge">{{ pendingCount }}</span>
-            </router-link>
-            <router-link to="/payments" class="top-nav-btn font-tech" active-class="active">
-              EARNING
-            </router-link>
+        <!-- Persistent Brand Badge -->
+        <div class="topbar-brand">
+          <span class="brand-k-logo font-display">K</span>
+          <div class="brand-text-block">
+            <span class="brand-name font-display">KOROKO</span>
+            <span class="brand-badge-label font-tech">ADMIN</span>
           </div>
         </div>
 
+        <!-- Global Responsive Search Bar -->
+        <div class="topbar-search-box">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8" stroke-width="2"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"/>
+          </svg>
+          <input 
+            v-model="searchKeyword" 
+            type="text" 
+            placeholder="Search catalog, orders, SKUs..." 
+            class="topbar-search-input font-tech"
+          />
+        </div>
+
+        <!-- Desktop Top Navigation Tabs (Dashboard, Product, Order, Pending, Earning) -->
+        <nav class="topbar-nav-links">
+          <router-link to="/" class="top-nav-btn font-tech" active-class="active" exact>
+            DASHBOARD
+          </router-link>
+          <router-link to="/products" class="top-nav-btn font-tech" active-class="active">
+            PRODUCT ({{ adminStore.products.length }})
+          </router-link>
+          <router-link to="/orders" class="top-nav-btn font-tech" active-class="active">
+            ORDER ({{ adminStore.orders.length }})
+          </router-link>
+          <router-link to="/pending" class="top-nav-btn font-tech" active-class="active">
+            PENDING
+            <span v-if="pendingCount > 0" class="top-pill-badge">{{ pendingCount }}</span>
+          </router-link>
+          <router-link to="/payments" class="top-nav-btn font-tech" active-class="active">
+            EARNING
+          </router-link>
+        </nav>
+
+        <!-- Right Quick Actions -->
         <div class="topbar-actions">
           <div class="system-sync-pill font-tech">
             <span class="sync-dot"></span>
-            <span>Printrove & Qikink Synced</span>
+            <span class="sync-text">Live Sync</span>
           </div>
-          <a href="https://koroko.in" target="_blank" class="topbar-icon-btn" title="View Live Customer Store">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+          <a href="https://koroko.in" target="_blank" class="topbar-icon-btn" title="View Customer Store (koroko.in)">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke-width="2"/>
               <polyline points="15 3 21 3 21 9" stroke-width="2"/>
               <line x1="10" y1="14" x2="21" y2="3" stroke-width="2"/>
@@ -221,11 +237,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { adminStore } from './state/store.js';
 import { authState, adminLogout } from './services/firebase.js';
 
+const searchKeyword = ref('');
 const route = useRoute();
 const router = useRouter();
 
@@ -496,35 +513,70 @@ const handleLogout = async () => {
   gap: 16px;
 }
 
-.topbar-left {
+.topbar-brand {
   display: flex;
   align-items: center;
-  gap: 24px;
-  overflow-x: auto;
+  gap: 10px;
+  flex-shrink: 0;
 }
-
-.mobile-brand-title {
-  display: none;
-  align-items: center;
-  gap: 8px;
-}
-.mobile-logo {
-  width: 28px;
-  height: 28px;
+.brand-k-logo {
+  width: 32px;
+  height: 32px;
   background: #ffffff;
   color: #000000;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 15px;
-  border-radius: 4px;
+  font-size: 16px;
+  border-radius: var(--radius-xs);
 }
-.mobile-brand-name {
-  font-size: 13px;
-  letter-spacing: 0.12em;
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+}
+.brand-name {
+  font-size: 13.5px;
   font-weight: 800;
-  white-space: nowrap;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+}
+.brand-badge-label {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.14em;
+}
+
+.topbar-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  width: 280px;
+  max-width: 100%;
+  transition: all 0.2s ease;
+}
+.topbar-search-box:focus-within {
+  border-color: #ffffff;
+  background: var(--bg-elevated);
+}
+.topbar-search-box svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.topbar-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 11.5px;
+  color: #ffffff;
+  width: 100%;
+}
+.topbar-search-input::placeholder {
+  color: var(--text-muted);
 }
 
 /* Topbar 5-Item Navigation */
@@ -713,10 +765,6 @@ const handleLogout = async () => {
     display: none;
   }
 
-  .mobile-brand-title {
-    display: flex;
-  }
-
   .topbar-nav-links {
     display: none;
   }
@@ -730,10 +778,35 @@ const handleLogout = async () => {
   }
 
   .admin-topbar {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    gap: 10px;
   }
 
-  .system-sync-pill span:last-child {
+  .topbar-brand {
+    gap: 6px;
+  }
+  .brand-k-logo {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .brand-name {
+    font-size: 12px;
+  }
+  .brand-badge-label {
+    display: none;
+  }
+
+  .topbar-search-box {
+    width: auto;
+    flex: 1;
+    padding: 5px 10px;
+  }
+
+  .system-sync-pill {
+    padding: 5px 8px;
+  }
+  .system-sync-pill .sync-text {
     display: none;
   }
 }
