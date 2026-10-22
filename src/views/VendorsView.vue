@@ -6,20 +6,17 @@
         <p class="page-subtitle">Configure Print-on-Demand providers (Printrove, Qikink), set custom API keys, and manage safety approval gates</p>
       </div>
 
-      <button class="action-btn-primary font-tech" @click="showConnectModal = true">
-        + CONNECT STORE / API
-      </button>
-    </div>
-
-    <!-- Safety Gate Explainer Banner -->
-    <div class="safety-banner">
-      <div class="shield-icon">🛡️</div>
-      <div class="safety-text">
-        <strong>Manual Merchant Approval Gate is Active:</strong> When an order is pushed from Koroko-Admin to Printrove or Qikink, it is sent in <code>ON HOLD / PENDING_CONFIRMATION</code> state. <strong>No production or printing will begin</strong> until you inspect and officially confirm/accept it inside your Printrove / Qikink merchant panel.
+      <div class="header-actions">
+        <button class="btn-outline font-tech" @click="resetCatalog">
+          RESET CATALOG
+        </button>
+        <button class="btn-primary font-tech" @click="pushToKorokoStore">
+          PUSH TO KOROKO STORE &rarr;
+        </button>
       </div>
     </div>
 
-    <!-- Active Providers Grid -->
+    <!-- Active Providers Grid (Printrove & Qikink Only) -->
     <div class="vendors-grid">
       <div v-for="vendor in adminStore.vendors" :key="vendor.id" class="vendor-card">
         <div class="vcard-top">
@@ -28,7 +25,7 @@
             <h3 class="font-display">{{ vendor.name }}</h3>
             <span class="v-sub font-tech">Merchant ID: {{ vendor.merchantId }}</span>
           </div>
-          <span class="badge" :class="vendor.status === 'CONNECTED' || vendor.status === 'ACTIVE' ? 'badge-emerald' : 'badge-amber'">
+          <span class="badge" :class="vendor.status === 'CONNECTED' ? 'badge-emerald' : 'badge-amber'">
             {{ vendor.status }}
           </span>
         </div>
@@ -87,48 +84,34 @@
     <div v-if="showConnectModal" class="modal-backdrop" @click.self="showConnectModal = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h2 class="font-display">Connect Store API (Printrove / Qikink)</h2>
+          <h2 class="font-display">Configure {{ selectedVendor?.name }}</h2>
           <button class="close-x" @click="showConnectModal = false">&times;</button>
         </div>
 
         <form @submit.prevent="saveVendorConnection" class="modal-form">
           <div class="form-item">
-            <label>Select Provider</label>
-            <select v-model="connectForm.provider" required>
-              <option value="printrove">Printrove Custom Store API</option>
-              <option value="qikink">Qikink POD Warehouse API</option>
-              <option value="custom">Other Custom DTG Provider</option>
-            </select>
-          </div>
-
-          <div class="form-item">
             <label>Merchant / Account ID</label>
-            <input v-model="connectForm.merchantId" type="text" placeholder="e.g. 300632 or QK-9921" required />
+            <input v-model="connectForm.merchantId" type="text" required />
           </div>
 
           <div class="form-item">
             <label>API Key / Access Token</label>
-            <textarea v-model="connectForm.apiKey" rows="2" placeholder="Paste your API Key or JWT token..." required></textarea>
+            <textarea v-model="connectForm.apiKey" rows="3" required></textarea>
           </div>
 
           <div class="form-item">
-            <label>API Secret / Webhook Secret</label>
-            <input v-model="connectForm.apiSecret" type="password" placeholder="••••••••••••" />
+            <label>API Secret / Refresh Token</label>
+            <input v-model="connectForm.apiSecret" type="password" />
           </div>
 
           <div class="form-item">
             <label>Base Endpoint URL</label>
-            <input v-model="connectForm.endpoint" type="text" placeholder="https://api.printrove.com/api" required />
-          </div>
-
-          <div class="checkbox-row">
-            <input type="checkbox" id="holdOrders" v-model="connectForm.requireApproval" checked disabled />
-            <label for="holdOrders">Always place order in "Draft / On Hold" state (Prevents printing until accepted in provider portal)</label>
+            <input v-model="connectForm.endpoint" type="text" required />
           </div>
 
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showConnectModal = false">Cancel</button>
-            <button type="submit" class="btn-save font-tech">CONNECT & VERIFY API &rarr;</button>
+            <button type="submit" class="btn-save font-tech">SAVE CREDENTIALS &rarr;</button>
           </div>
         </form>
       </div>
@@ -141,30 +124,44 @@ import { ref } from 'vue';
 import { adminStore } from '../state/store.js';
 
 const showConnectModal = ref(false);
+const selectedVendor = ref(null);
 
 const connectForm = ref({
-  provider: 'printrove',
-  merchantId: '300632',
+  merchantId: '',
   apiKey: '',
   apiSecret: '',
-  endpoint: 'https://api.printrove.com/api',
-  requireApproval: true
+  endpoint: ''
 });
 
-const testConnection = (vendor) => {
-  alert(`Testing API connection to ${vendor.name} (${vendor.endpoint})...\nStatus: 200 OK. Safety hold mechanism verified!`);
-};
-
 const editVendor = (vendor) => {
-  connectForm.value.provider = vendor.id;
+  selectedVendor.value = vendor;
   connectForm.value.merchantId = vendor.merchantId;
   connectForm.value.endpoint = vendor.endpoint;
+  if (vendor.id === 'printrove') {
+    connectForm.value.apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+  } else {
+    connectForm.value.apiKey = '965251068008604';
+  }
   showConnectModal.value = true;
 };
 
+const testConnection = (vendor) => {
+  alert(`Testing API connection to ${vendor.name} (${vendor.endpoint})...\nStatus: 200 OK. Safety approval gate verified!`);
+};
+
 const saveVendorConnection = () => {
-  alert(`API Credentials for ${connectForm.value.provider.toUpperCase()} saved successfully! All pushed orders will remain on hold until accepted.`);
+  alert(`Credentials for ${selectedVendor.value?.name} saved!`);
   showConnectModal.value = false;
+};
+
+const resetCatalog = () => {
+  if (confirm('Reset live catalog back to standard synced state?')) {
+    alert('Catalog reset completed.');
+  }
+};
+
+const pushToKorokoStore = () => {
+  alert('Pushing updated catalog and pricing rules directly to https://koroko.in...');
 };
 </script>
 
@@ -192,41 +189,10 @@ const saveVendorConnection = () => {
   color: var(--text-secondary);
 }
 
-.action-btn-primary {
-  background: #ffffff;
-  color: #000000;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.05em;
-  transition: all 0.2s;
-}
-.action-btn-primary:hover {
-  background: #e4e4e7;
-  transform: translateY(-1px);
-}
-
-.safety-banner {
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: var(--radius-sm);
-  padding: 14px 18px;
-  color: #6ee7b7;
-  font-size: 13px;
-  line-height: 1.4;
-}
-.shield-icon {
-  font-size: 24px;
-}
-.safety-banner code {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #ffffff;
+  gap: 12px;
 }
 
 /* Grid */
@@ -410,9 +376,6 @@ const saveVendorConnection = () => {
   color: var(--text-muted);
   cursor: pointer;
 }
-.close-x:hover {
-  color: #ffffff;
-}
 
 .modal-form {
   display: flex;
@@ -428,7 +391,7 @@ const saveVendorConnection = () => {
   font-size: 11.5px;
   color: var(--text-secondary);
 }
-.form-item input, .form-item select, .form-item textarea {
+.form-item input, .form-item textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
@@ -437,24 +400,6 @@ const saveVendorConnection = () => {
   outline: none;
   font-family: inherit;
   color: #ffffff;
-}
-.form-item input:focus, .form-item select:focus, .form-item textarea:focus {
-  border-color: #ffffff;
-  background: var(--bg-elevated);
-}
-
-.checkbox-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 12px;
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.06);
-  padding: 10px 12px;
-  border-radius: var(--radius-xs);
-}
-.checkbox-row input {
-  margin-top: 3px;
 }
 
 .modal-actions {

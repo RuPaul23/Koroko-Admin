@@ -5,16 +5,15 @@
 import { reactive } from 'vue';
 
 export const adminStore = reactive({
-  // Global Metrics
   metrics: {
     totalRevenue: 284950,
     activeOrders: 42,
     pendingFulfillment: 9,
     catalogItems: 24,
-    activeVendors: 3
+    activeVendors: 2
   },
 
-  // Vendors / Print-On-Demand Providers
+  // Vendors: Printrove & Qikink with real credentials
   vendors: [
     {
       id: 'printrove',
@@ -31,29 +30,16 @@ export const adminStore = reactive({
     },
     {
       id: 'qikink',
-      name: 'Qikink POD Warehouse',
-      status: 'STANDBY',
-      merchantId: 'QK-9921',
+      name: 'Qikink POD Warehouse API',
+      status: 'CONNECTED',
+      merchantId: '965251068008604',
       email: 'logistics@koroko.in',
-      endpoint: 'https://api.qikink.com/v1',
+      endpoint: 'https://api.qikink.com/api',
       autoSync: false,
-      lastSync: '2 days ago',
-      productsSynced: 12,
-      ordersFulfilled: 88,
-      health: 'Standby Ready'
-    },
-    {
-      id: 'local_dtg',
-      name: 'Koroko Direct DTG Studio (Bengaluru)',
-      status: 'ACTIVE',
-      merchantId: 'KOROKO-HQ-01',
-      email: 'studio@koroko.in',
-      endpoint: 'Direct Local Dispatch',
-      autoSync: true,
-      lastSync: 'Just now',
-      productsSynced: 8,
-      ordersFulfilled: 120,
-      health: 'Active Onsite'
+      lastSync: '1 hour ago',
+      productsSynced: 24,
+      ordersFulfilled: 112,
+      health: 'Active Ready'
     }
   ],
 
@@ -66,10 +52,10 @@ export const adminStore = reactive({
       phone: '+91 98210 44123',
       date: '2026-10-22 11:20 AM',
       items: [
-        { title: 'Oversized Anime Heavyweight Tee • Phantom Black', size: 'XL', qty: 1, price: 1499 }
+        { title: 'Oversized Anime Heavyweight Tee - Phantom Black', size: 'XL', qty: 1, price: 1499 }
       ],
       total: 1499,
-      paymentMethod: 'Razorpay UPI (rzp_live_*)',
+      paymentMethod: 'Razorpay UPI (rzp_live)',
       paymentStatus: 'PAID',
       fulfillmentStatus: 'PENDING_VENDOR',
       vendor: 'Printrove',
@@ -83,7 +69,7 @@ export const adminStore = reactive({
       phone: '+91 98450 11982',
       date: '2026-10-22 09:45 AM',
       items: [
-        { title: 'Minimalist Tokyo Noir Boxy Tee • Off White', size: 'M', qty: 2, price: 1299 }
+        { title: 'Minimalist Tokyo Noir Boxy Tee - Off White', size: 'M', qty: 2, price: 1299 }
       ],
       total: 2598,
       paymentMethod: 'Razorpay Netbanking',
@@ -106,8 +92,8 @@ export const adminStore = reactive({
       paymentMethod: 'UPI (Google Pay)',
       paymentStatus: 'PAID',
       fulfillmentStatus: 'DISPATCHED',
-      vendor: 'Direct DTG Studio',
-      vendorOrderId: 'BLR-0412',
+      vendor: 'Qikink',
+      vendorOrderId: 'QK-0412',
       shippingAddress: 'B-204, Palm Springs, Golf Course Road, Gurugram, 122002'
     },
     {
@@ -151,47 +137,44 @@ export const adminStore = reactive({
     {
       id: 'koroko-tee-heavy-01',
       title: 'Oversized Heavyweight 240 GSM Tee',
-      category: 'T-Shirts',
-      colorways: ['Phantom Black', 'Bone White', 'Acid Charcoal'],
+      category: 'oversized',
+      colorways: ['Black', 'White', 'Navy Blue'],
       baseCost: 480,
       printCost: 190,
       retailPrice: 1499,
       mrp: 2499,
       margin: '55.3%',
       active: true,
-      mockupFront: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-      mockupBack: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80'
+      mockupFront: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/e5cef519-1e79-4945-8418-1b7d83807b91-mockup-1371-498-black-1792312333069.webp',
+      mockupBack: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/b4f09df2-40b0-49f2-a797-2f701d5f52fa-mockup-1371-499-black-1792312334325.webp'
     },
     {
-      id: 'koroko-tee-boxy-02',
-      title: 'Tokyo Street Boxy Drop-Cut Tee',
-      category: 'T-Shirts',
-      colorways: ['Off White', 'Pitch Black', 'Slate Grey'],
-      baseCost: 450,
-      printCost: 170,
-      retailPrice: 1399,
-      mrp: 2299,
-      margin: '55.6%',
+      id: 'koroko-croptop-01',
+      title: 'Shibuya Rebel Baby Crop Tee',
+      category: 'croptops',
+      colorways: ['Iris Lavender', 'Butter Yellow', 'Black'],
+      baseCost: 259,
+      printCost: 150,
+      retailPrice: 599,
+      mrp: 1199,
+      margin: '52.0%',
       active: true,
-      mockupFront: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
-      mockupBack: ''
+      mockupFront: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/iris-lavender/mockups/52e2dbc6-9c42-4c8d-bb40-073abb4806b4-mockup-464-704-iris-lavender-1792302355004.webp',
+      mockupBack: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/iris-lavender/mockups/53e8346a-aff8-4a59-84cb-fdbac55c3904-mockup-464-743-iris-lavender-1792302356180.webp'
     },
     {
       id: 'koroko-hoodie-01',
-      title: 'Monochrome 400 GSM French Terry Hoodie',
-      category: 'Hoodies',
-      colorways: ['Pitch Black', 'Heather Grey'],
-      baseCost: 950,
+      title: 'Shibuya Coordinates Oversized Hoodie',
+      category: 'hoodies',
+      colorways: ['Navy Blue', 'Black', 'White'],
+      baseCost: 672,
       printCost: 250,
-      retailPrice: 2899,
-      mrp: 4499,
-      margin: '58.6%',
+      retailPrice: 1499,
+      mrp: 2799,
+      margin: '46.0%',
       active: true,
-      mockupFront: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&auto=format&fit=crop&q=80',
-      mockupBack: ''
+      mockupFront: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/navy-blue/mockups/5183d1a1-cbf6-4f3f-9914-ed686826f131-mockup-1371-498-navy-blue-1792312335603.webp',
+      mockupBack: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/navy-blue/mockups/259cf9d4-5545-49bd-8b33-e517f1c57caf-mockup-1371-499-navy-blue-1792312337734.webp'
     }
-  ],
-
-  // Design Upload Queue / Print Placements
-  designDrafts: []
+  ]
 });

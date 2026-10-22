@@ -10,9 +10,6 @@
         <button class="btn-secondary font-tech" @click="resetStudio">
           RESET CANVAS
         </button>
-        <button class="btn-publish font-tech" @click="publishDrop" :disabled="!frontDesign && !backDesign">
-          PUBLISH TO KOROKO STORE &rarr;
-        </button>
       </div>
     </div>
 
@@ -35,6 +32,14 @@
           >
             BACK MOCKUP
           </button>
+          <button 
+            v-if="additionalImages.length > 0"
+            class="tab-btn font-tech" 
+            :class="{ active: currentView === 'optional' }"
+            @click="currentView = 'optional'"
+          >
+            ADDITIONAL ANGLES ({{ additionalImages.length }})
+          </button>
 
           <div class="color-palette-bar">
             <span class="color-label font-tech">SHADE:</span>
@@ -50,27 +55,24 @@
           </div>
         </div>
 
-        <!-- The Canvas -->
+        <!-- The Canvas Stage -->
         <div class="mockup-stage" :style="{ backgroundColor: selectedColor.canvasBg }">
-          <!-- Apparel Blank Background -->
           <div class="apparel-wrapper">
+            <!-- Authentic Garment Blank -->
             <img 
-              :src="currentView === 'front' ? selectedColor.frontImage : selectedColor.backImage" 
+              :src="currentMockupImage" 
               alt="Apparel Mockup" 
               class="apparel-base-img"
             />
 
             <!-- Printable Bounding Box -->
-            <div class="printable-boundary">
-              <!-- Overlay Graphic -->
+            <div v-if="currentView !== 'optional'" class="printable-boundary">
               <div 
                 v-if="currentArtwork" 
                 class="design-layer"
                 :style="artworkStyle"
-                @mousedown="startDrag"
               >
                 <img :src="currentArtwork" alt="Printed Graphic" class="graphic-img" />
-                <div class="resize-handle" @mousedown.stop="startResize"></div>
               </div>
 
               <div v-else class="empty-dropzone-indicator">
@@ -85,7 +87,7 @@
           </div>
         </div>
 
-        <div class="canvas-controls-bar">
+        <div v-if="currentView !== 'optional'" class="canvas-controls-bar">
           <div class="control-item">
             <label>Scale: {{ designScale }}%</label>
             <input type="range" min="30" max="140" v-model.number="designScale" />
@@ -102,8 +104,12 @@
 
       <!-- Right: Product Drop Specification -->
       <div class="spec-panel">
-        <h2 class="spec-title font-display">Drop Specifications</h2>
+        <div class="spec-header-row">
+          <h2 class="spec-title font-display">Drop Specifications</h2>
+          <span class="badge badge-emerald">Gemini AI Active</span>
+        </div>
 
+        <!-- Dual Upload: Front and Back -->
         <div class="upload-dual-boxes">
           <!-- Front Upload -->
           <div class="upload-card">
@@ -119,7 +125,7 @@
                   <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
                   <polyline points="21 15 16 10 5 21" stroke-width="2"/>
                 </svg>
-                <span>PNG with Transparent BG (Min 300 DPI)</span>
+                <span>Upload Front Graphic</span>
               </div>
               <img v-else :src="frontDesign" alt="Front Preview" class="upload-thumb" />
             </label>
@@ -139,25 +145,65 @@
                   <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
                   <polyline points="21 15 16 10 5 21" stroke-width="2"/>
                 </svg>
-                <span>Full Poster Back Graphic (PNG)</span>
+                <span>Upload Back Graphic</span>
               </div>
               <img v-else :src="backDesign" alt="Back Preview" class="upload-thumb" />
             </label>
           </div>
         </div>
 
-        <!-- Sample Graphic Presets -->
-        <div class="presets-section">
-          <label class="presets-label font-tech">OR LOAD SAMPLE KOROKO ARTWORK</label>
-          <div class="presets-list">
+        <!-- Optional Additional Images Section -->
+        <div class="optional-images-box">
+          <div class="optional-header">
+            <span class="font-tech optional-title">OPTIONAL ADD-ON IMAGES (LIFESTYLE / CLOSE-UP)</span>
+            <label class="add-optional-btn font-tech">
+              + ADD IMAGE
+              <input type="file" accept="image/*" multiple @change="onAddOptionalImages" />
+            </label>
+          </div>
+          <div v-if="additionalImages.length > 0" class="optional-thumbs-list">
+            <div v-for="(img, idx) in additionalImages" :key="idx" class="opt-thumb-wrap">
+              <img :src="img" alt="Optional image" />
+              <button class="remove-opt" @click="removeOptionalImage(idx)">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemini AI Tools Section -->
+        <div class="gemini-ai-card">
+          <div class="gemini-header">
+            <span class="gemini-title font-display">Gemini AI Studio Assistant</span>
+            <span class="gemini-badge font-tech">GEMINI 1.5 & IMAGEN</span>
+          </div>
+
+          <div class="gemini-actions-row">
+            <!-- Auto Name Generator -->
             <button 
-              v-for="(preset, i) in sampleArtworks" 
-              :key="i"
-              class="preset-item"
-              @click="loadSampleArtwork(preset.url)"
+              type="button" 
+              class="ai-action-btn font-tech" 
+              :disabled="aiNameLoading"
+              @click="generateNameWithGemini"
             >
-              <img :src="preset.url" :alt="preset.name" />
-              <span>{{ preset.name }}</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
+                <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/>
+              </svg>
+              <span v-if="!aiNameLoading">AUTO-GENERATE DRESS NAME</span>
+              <span v-else>ANALYZING ARTWORK...</span>
+            </button>
+
+            <!-- Gemini Image Generator -->
+            <button 
+              type="button" 
+              class="ai-action-btn font-tech" 
+              :disabled="aiImageLoading"
+              @click="showImagePromptModal = true"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>GENERATE IMAGE VIA GEMINI</span>
             </button>
           </div>
         </div>
@@ -165,8 +211,21 @@
         <!-- Drop Details Form -->
         <div class="details-form">
           <div class="form-row">
-            <label>Product Drop Title</label>
-            <input v-model="dropForm.title" type="text" placeholder="e.g. Neo-Tokyo Heavyweight Acid Tee" />
+            <div class="label-with-ai">
+              <label>Product Drop Title</label>
+              <span v-if="aiGeneratedNote" class="ai-pill">{{ aiGeneratedNote }}</span>
+            </div>
+            <input v-model="dropForm.title" type="text" placeholder="e.g. SHIBUYA NOIR OVERSIZED TEE" />
+          </div>
+
+          <!-- Category Selection fetched from koroko.in -->
+          <div class="form-row">
+            <label>Store Category (Fetched from koroko.in)</label>
+            <select v-model="dropForm.category" @change="onCategorySelect">
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                {{ cat.name }} - {{ cat.badge }}
+              </option>
+            </select>
           </div>
 
           <div class="form-row-grid">
@@ -181,23 +240,60 @@
           </div>
 
           <div class="form-row">
-            <label>Print Area Placement</label>
-            <select v-model="dropForm.printPlacement">
-              <option value="chest_and_back">Front Left Chest + Full Back Print</option>
-              <option value="oversized_front">Oversized Center Front (A3 300 DPI)</option>
-              <option value="minimalist_front">Minimalist Center Embroidery</option>
+            <label>Catalog Description</label>
+            <textarea v-model="dropForm.description" rows="2" placeholder="Japanese streetwear description..."></textarea>
+          </div>
+        </div>
+
+        <!-- PUBLISH BUTTON MOVED TO BOTTOM OF SPECIFICATIONS -->
+        <div class="bottom-publish-section">
+          <button 
+            class="btn-publish-bottom font-tech" 
+            @click="publishDrop" 
+            :disabled="!frontDesign && !backDesign"
+          >
+            PUBLISH TO KOROKO STORE &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gemini Image Generation Modal -->
+    <div v-if="showImagePromptModal" class="modal-backdrop" @click.self="showImagePromptModal = false">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 class="font-display">Generate Graphic / Model Image (Gemini)</h2>
+          <button class="close-x" @click="showImagePromptModal = false">&times;</button>
+        </div>
+
+        <form @submit.prevent="generateImageWithGemini" class="modal-form">
+          <div class="form-item">
+            <label>Describe Graphic or Garment Prompt</label>
+            <textarea 
+              v-model="aiImagePrompt" 
+              rows="3" 
+              placeholder="e.g. Cyberpunk Japanese kanji calligraphy poster, chrome textures, high contrast monochrome vector..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-item">
+            <label>Apply Output To</label>
+            <select v-model="aiTargetSide">
+              <option value="front">Front Graphic</option>
+              <option value="back">Back Graphic</option>
+              <option value="optional">Add as Optional Photo</option>
             </select>
           </div>
 
-          <div class="form-row">
-            <label>Category</label>
-            <select v-model="dropForm.category">
-              <option value="oversized_tees">Oversized Heavyweight Tees (240 GSM)</option>
-              <option value="boxy_tees">Tokyo Boxy Drop-Shoulder Tees</option>
-              <option value="hoodies">French Terry Winter Hoodies (400 GSM)</option>
-            </select>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" @click="showImagePromptModal = false">Cancel</button>
+            <button type="submit" class="btn-save font-tech" :disabled="aiImageLoading">
+              <span v-if="!aiImageLoading">GENERATE WITH GEMINI &rarr;</span>
+              <span v-else>CREATING IMAGE...</span>
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </div>
@@ -206,30 +302,33 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { adminStore } from '../state/store.js';
+import { KOROKO_CATEGORIES } from '../data/categories.js';
 
+const categories = ref(KOROKO_CATEGORIES);
 const currentView = ref('front');
 
+// Authentic Koroko Garment Mockup Blanks (Black, White, Charcoal)
 const availableColors = [
   {
     name: 'Phantom Black',
     hex: '#141416',
     canvasBg: '#09090b',
-    frontImage: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
-    backImage: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80'
+    frontImage: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/e5cef519-1e79-4945-8418-1b7d83807b91-mockup-1371-498-black-1792312333069.webp',
+    backImage: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/b4f09df2-40b0-49f2-a797-2f701d5f52fa-mockup-1371-499-black-1792312334325.webp'
   },
   {
-    name: 'Bone White',
+    name: 'White',
     hex: '#f5f5f7',
     canvasBg: '#18181b',
-    frontImage: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
-    backImage: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80'
+    frontImage: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/white/mockups/b8d950d6-9ab5-4d00-a078-86f0c30d37dc-mockup-1371-498-white-1792312331576.webp',
+    backImage: 'https://cdn.printrove.com/catalog/products/1371/images/1b4f02e2-61fb-43ce-98a3-921c66b7457d-02-back.png'
   },
   {
-    name: 'Acid Charcoal',
-    hex: '#3f3f46',
-    canvasBg: '#111115',
-    frontImage: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&auto=format&fit=crop&q=80',
-    backImage: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80'
+    name: 'Navy Blue',
+    hex: '#032d49',
+    canvasBg: '#0b1118',
+    frontImage: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/navy-blue/mockups/5183d1a1-cbf6-4f3f-9914-ed686826f131-mockup-1371-498-navy-blue-1792312335603.webp',
+    backImage: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/navy-blue/mockups/259cf9d4-5545-49bd-8b33-e517f1c57caf-mockup-1371-499-navy-blue-1792312337734.webp'
   }
 ];
 
@@ -237,9 +336,34 @@ const selectedColor = ref(availableColors[0]);
 
 const frontDesign = ref('https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=80');
 const backDesign = ref(null);
+const additionalImages = ref([]);
 
-const designScale = ref(85);
+const designScale = ref(80);
 const designOffsetY = ref(0);
+
+// AI States
+const aiNameLoading = ref(false);
+const aiImageLoading = ref(false);
+const aiGeneratedNote = ref('');
+const showImagePromptModal = ref(false);
+const aiImagePrompt = ref('Cyberpunk Tokyo typography graphic in monochrome street style');
+const aiTargetSide = ref('front');
+
+const dropForm = ref({
+  title: 'SHIBUYA CYPHER OVERSIZED TEE',
+  category: 'oversized',
+  retailPrice: 1499,
+  baseCost: 480,
+  printCost: 190,
+  description: 'Authentic KOROKO official drop. 240 GSM combed cotton with high-density streetwear DTF artwork.'
+});
+
+const currentMockupImage = computed(() => {
+  if (currentView.value === 'optional' && additionalImages.value.length > 0) {
+    return additionalImages.value[0];
+  }
+  return currentView.value === 'front' ? selectedColor.value.frontImage : selectedColor.value.backImage;
+});
 
 const currentArtwork = computed(() => {
   return currentView.value === 'front' ? frontDesign.value : backDesign.value;
@@ -250,21 +374,6 @@ const artworkStyle = computed(() => {
     width: `${designScale.value}%`,
     transform: `translateY(${designOffsetY.value}px)`
   };
-});
-
-const sampleArtworks = [
-  { name: 'Tokyo Noir Typography', url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Cyberpunk Kanji', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80' },
-  { name: 'Monochrome Wave', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=80' }
-];
-
-const dropForm = ref({
-  title: 'Cyber Kanji Heavyweight Drop Tee',
-  category: 'oversized_tees',
-  retailPrice: 1499,
-  baseCost: 480,
-  printCost: 190,
-  printPlacement: 'chest_and_back'
 });
 
 const onFileChange = (e, side) => {
@@ -284,24 +393,116 @@ const onFileChange = (e, side) => {
   }
 };
 
-const loadSampleArtwork = (url) => {
-  if (currentView.value === 'front') {
-    frontDesign.value = url;
-  } else {
-    backDesign.value = url;
-  }
+const onAddOptionalImages = (e) => {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      additionalImages.value.push(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const removeOptionalImage = (index) => {
+  additionalImages.value.splice(index, 1);
 };
 
 const centerArtwork = () => {
   designOffsetY.value = 0;
-  designScale.value = 85;
+  designScale.value = 80;
 };
 
 const resetStudio = () => {
   frontDesign.value = null;
   backDesign.value = null;
+  additionalImages.value = [];
   designOffsetY.value = 0;
-  designScale.value = 85;
+  designScale.value = 80;
+  aiGeneratedNote.value = '';
+};
+
+// 1. Gemini Auto Name Generator
+const generateNameWithGemini = async () => {
+  aiNameLoading.value = true;
+  aiGeneratedNote.value = '';
+
+  try {
+    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/gemini` : '/api/gemini';
+    const activeImage = frontDesign.value || backDesign.value || '';
+
+    const res = await fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'generate-name',
+        imageData: activeImage,
+        category: dropForm.value.category,
+        prompt: dropForm.value.title
+      })
+    });
+
+    const data = await res.json();
+    if (data.success && data.result) {
+      dropForm.value.title = data.result.title;
+      if (data.result.description) {
+        dropForm.value.description = data.result.description;
+      }
+      aiGeneratedNote.value = 'Generated by Gemini AI';
+    } else {
+      dropForm.value.title = 'TOKYO NOIR HEAVYWEIGHT TEE';
+      aiGeneratedNote.value = 'Generated (Local)';
+    }
+  } catch (err) {
+    dropForm.value.title = 'NEO-TOKYO OVERSIZED HEAVYWEIGHT TEE';
+    aiGeneratedNote.value = 'Generated (Preset)';
+  } finally {
+    aiNameLoading.value = false;
+  }
+};
+
+// 2. Gemini Image Generator
+const generateImageWithGemini = async () => {
+  aiImageLoading.value = true;
+
+  try {
+    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/gemini` : '/api/gemini';
+    const res = await fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'generate-image',
+        prompt: aiImagePrompt.value
+      })
+    });
+
+    const data = await res.json();
+    if (data.success && data.imageUrl) {
+      if (aiTargetSide.value === 'front') {
+        frontDesign.value = data.imageUrl;
+        currentView.value = 'front';
+      } else if (aiTargetSide.value === 'back') {
+        backDesign.value = data.imageUrl;
+        currentView.value = 'back';
+      } else {
+        additionalImages.value.push(data.imageUrl);
+      }
+      showImagePromptModal.value = false;
+    } else {
+      alert('Could not generate image. Please check Gemini API Key.');
+    }
+  } catch (err) {
+    alert('Gemini Image generation error: ' + err.message);
+  } finally {
+    aiImageLoading.value = false;
+  }
+};
+
+const onCategorySelect = () => {
+  const cat = categories.value.find(c => c.id === dropForm.value.category);
+  if (cat && !dropForm.value.description) {
+    dropForm.value.description = `${cat.silhouette}. ${cat.fabric}.`;
+  }
 };
 
 const publishDrop = () => {
@@ -317,11 +518,12 @@ const publishDrop = () => {
     margin: `${Math.round(((dropForm.value.retailPrice - (dropForm.value.baseCost + dropForm.value.printCost)) / dropForm.value.retailPrice) * 100)}%`,
     active: true,
     mockupFront: selectedColor.value.frontImage,
-    mockupBack: selectedColor.value.backImage
+    mockupBack: selectedColor.value.backImage,
+    additionalImages: [...additionalImages.value]
   };
 
   adminStore.products.unshift(newProduct);
-  alert(`"${newProduct.title}" dropped successfully! It is now published and synced with https://koroko.in catalog.`);
+  alert(`"${newProduct.title}" has been published and synced with https://koroko.in catalog!`);
 };
 </script>
 
@@ -349,16 +551,11 @@ const publishDrop = () => {
   color: var(--text-secondary);
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 .btn-secondary {
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   color: var(--text-secondary);
-  padding: 10px 16px;
+  padding: 9px 16px;
   border-radius: var(--radius-sm);
   font-size: 12px;
   transition: all 0.2s;
@@ -368,29 +565,10 @@ const publishDrop = () => {
   color: #ffffff;
 }
 
-.btn-publish {
-  background: #ffffff;
-  color: #000000;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  transition: all 0.2s;
-}
-.btn-publish:hover:not(:disabled) {
-  background: #e4e4e7;
-  transform: translateY(-1px);
-}
-.btn-publish:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 /* Studio Grid */
 .studio-grid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1.25fr 1fr;
   gap: 24px;
 }
 
@@ -439,8 +617,8 @@ const publishDrop = () => {
   color: var(--text-muted);
 }
 .color-dot {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
@@ -475,7 +653,6 @@ const publishDrop = () => {
   height: 100%;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  filter: contrast(1.05) brightness(0.95);
 }
 
 .printable-boundary {
@@ -484,7 +661,7 @@ const publishDrop = () => {
   left: 24%;
   width: 52%;
   height: 58%;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,14 +674,12 @@ const publishDrop = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: move;
   position: relative;
 }
 .graphic-img {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
 }
 
 .empty-dropzone-indicator {
@@ -512,7 +687,7 @@ const publishDrop = () => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 11px;
   text-align: center;
   padding: 10px;
@@ -563,7 +738,12 @@ const publishDrop = () => {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+}
+.spec-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .spec-title {
   font-size: 18px;
@@ -598,7 +778,7 @@ const publishDrop = () => {
   border: 1px dashed var(--border-medium);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
-  height: 110px;
+  height: 95px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -622,7 +802,7 @@ const publishDrop = () => {
   color: var(--text-muted);
   font-size: 11px;
   text-align: center;
-  padding: 8px;
+  padding: 6px;
 }
 .upload-thumb {
   width: 100%;
@@ -630,71 +810,158 @@ const publishDrop = () => {
   object-fit: contain;
 }
 
-.presets-section {
+/* Optional Add-on Images */
+.optional-images-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-ultra-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
-.presets-label {
+.optional-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.optional-title {
   font-size: 10.5px;
   color: var(--text-muted);
 }
-.presets-list {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.preset-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  padding: 6px 10px;
-  color: var(--text-subtle);
+.add-optional-btn {
   font-size: 11px;
-  white-space: nowrap;
-  transition: all 0.2s;
+  color: #34d399;
+  cursor: pointer;
 }
-.preset-item:hover {
-  border-color: #ffffff;
-  color: #ffffff;
+.add-optional-btn input {
+  display: none;
 }
-.preset-item img {
-  width: 22px;
-  height: 22px;
-  border-radius: 2px;
+.optional-thumbs-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.opt-thumb-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.opt-thumb-wrap img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
+.remove-opt {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 12px;
+  width: 16px;
+  height: 16px;
+  line-height: 14px;
+}
 
+/* Gemini AI Card */
+.gemini-ai-card {
+  background: linear-gradient(135deg, rgba(30, 30, 40, 0.6) 0%, rgba(15, 15, 20, 0.8) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gemini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gemini-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.gemini-badge {
+  font-size: 10px;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+.gemini-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ai-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-subtle);
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+.ai-action-btn:hover:not(:disabled) {
+  border-color: #ffffff;
+  background: var(--bg-elevated);
+  color: #ffffff;
+}
+.ai-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form */
 .details-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 6px;
+  gap: 12px;
 }
 .form-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+.label-with-ai {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ai-pill {
+  font-size: 10px;
+  color: #34d399;
+  font-family: var(--font-mono-tech);
+}
 .form-row label {
   font-size: 11.5px;
   color: var(--text-secondary);
   font-weight: 500;
 }
-.form-row input, .form-row select {
+.form-row input, .form-row select, .form-row textarea {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   padding: 10px 14px;
   font-size: 13px;
   outline: none;
+  font-family: inherit;
+  color: #ffffff;
   transition: all 0.2s;
 }
-.form-row input:focus, .form-row select:focus {
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
   border-color: #ffffff;
   background: var(--bg-elevated);
 }
@@ -711,6 +978,115 @@ const publishDrop = () => {
   border-radius: var(--radius-xs);
   font-size: 13px;
   color: #34d399;
+}
+
+/* Bottom Publish Section */
+.bottom-publish-section {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-ultra-subtle);
+}
+.btn-publish-bottom {
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  transition: all 0.2s;
+}
+.btn-publish-bottom:hover:not(:disabled) {
+  background: #e4e4e7;
+  transform: translateY(-1px);
+}
+.btn-publish-bottom:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 500px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h2 {
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+.close-x {
+  font-size: 24px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-item label {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.form-item textarea, .form-item select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  color: #ffffff;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+.btn-cancel {
+  padding: 10px 18px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.btn-save {
+  background: #ffffff;
+  color: #000000;
+  padding: 10px 20px;
+  border-radius: var(--radius-xs);
+  font-weight: 700;
+  font-size: 12px;
 }
 
 @media (max-width: 1024px) {

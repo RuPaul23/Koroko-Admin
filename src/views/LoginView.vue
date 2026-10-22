@@ -4,16 +4,10 @@
       <div class="brand-top">
         <div class="brand-badge-large">K</div>
         <h1 class="brand-title font-display">KOROKO ADMIN</h1>
-        <p class="brand-desc">Master Operations Control Portal • admin.koroko.in</p>
+        <p class="brand-desc">admin.koroko.in</p>
       </div>
 
-      <!-- Security Notice -->
-      <div class="security-lock-pill">
-        <span class="lock-icon">🔒</span>
-        <span>Restricted Access: Whitelisted Google Admin Account Only</span>
-      </div>
-
-      <!-- Google Sign-In (Primary Admin Method) -->
+      <!-- Google Sign-In -->
       <div class="auth-buttons-group">
         <button 
           type="button" 
@@ -27,8 +21,8 @@
             <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
             <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
           </svg>
-          <span v-if="!loading">SIGN IN WITH ADMIN GOOGLE ACCOUNT</span>
-          <span v-else>VERIFYING BACKEND PERMISSIONS...</span>
+          <span v-if="!loading">SIGN IN WITH GOOGLE ADMIN</span>
+          <span v-else>VERIFYING BACKEND...</span>
         </button>
       </div>
 
@@ -38,12 +32,12 @@
 
       <form @submit.prevent="handleEmailSignIn" class="login-form">
         <div class="form-group">
-          <label>Authorized Email Address</label>
+          <label>Authorized Admin Email</label>
           <div class="input-wrapper">
             <input 
               v-model="email" 
               type="email" 
-              placeholder="e.g. korokoindia@gmail.com" 
+              placeholder="korokoindia@gmail.com" 
               required 
             />
           </div>
@@ -66,13 +60,13 @@
         </div>
 
         <button type="submit" class="submit-btn font-tech" :disabled="loading">
-          <span v-if="!loading">VERIFY CREDENTIALS &rarr;</span>
-          <span v-else>CONNECTING...</span>
+          <span v-if="!loading">LOGIN &rarr;</span>
+          <span v-else>AUTHENTICATING...</span>
         </button>
       </form>
 
       <div class="login-footer">
-        <span>Backend Zero Trust Enforcement • Unauthorized logins are rejected by the server</span>
+        <span>Protected by Backend Identity Verification</span>
       </div>
     </div>
   </div>
@@ -100,7 +94,7 @@ const handleGoogleSignIn = async () => {
   if (res.success) {
     router.push('/');
   } else {
-    errorMessage.value = res.error || 'Authentication failed. Please verify you are using an authorized Koroko administrator account.';
+    errorMessage.value = res.error || 'Authentication failed. Please verify your administrator account.';
   }
 };
 
@@ -114,7 +108,7 @@ const handleEmailSignIn = async () => {
   if (res.success) {
     router.push('/');
   } else {
-    errorMessage.value = res.error || 'Access Denied: Email is not authorized or password is incorrect.';
+    errorMessage.value = res.error || 'Access Denied: Invalid credentials.';
   }
 };
 </script>
@@ -137,12 +131,12 @@ const handleEmailSignIn = async () => {
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
   padding: 40px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
 }
 
 .brand-top {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 .brand-badge-large {
   width: 52px;
@@ -157,31 +151,15 @@ const handleEmailSignIn = async () => {
   font-size: 26px;
   border-radius: var(--radius-md);
   margin-bottom: 16px;
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
 }
 .brand-title {
   font-size: 20px;
   letter-spacing: 0.18em;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .brand-desc {
   font-size: 12px;
   color: var(--text-muted);
-}
-
-.security-lock-pill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  padding: 8px 12px;
-  border-radius: var(--radius-full);
-  color: #fde68a;
-  font-size: 11px;
-  font-family: var(--font-mono-tech);
-  margin-bottom: 24px;
 }
 
 .auth-buttons-group {
@@ -203,11 +181,9 @@ const handleEmailSignIn = async () => {
   font-size: 12.5px;
   letter-spacing: 0.04em;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
 }
 .google-sign-in-btn:hover:not(:disabled) {
   background: #e4e4e7;
-  transform: translateY(-1px);
 }
 .google-sign-in-btn:disabled {
   opacity: 0.6;
@@ -263,7 +239,6 @@ const handleEmailSignIn = async () => {
   border-radius: var(--radius-sm);
   padding: 12px 16px;
   font-size: 13.5px;
-  transition: all 0.2s;
   outline: none;
 }
 .input-wrapper input:focus {
@@ -278,7 +253,6 @@ const handleEmailSignIn = async () => {
   color: #fb7185;
   border-radius: var(--radius-sm);
   font-size: 12px;
-  line-height: 1.4;
 }
 
 .submit-btn {
@@ -306,7 +280,5 @@ const handleEmailSignIn = async () => {
   margin-top: 24px;
   font-size: 10.5px;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
-  line-height: 1.3;
 }
 </style>
