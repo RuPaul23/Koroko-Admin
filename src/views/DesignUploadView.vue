@@ -15,7 +15,7 @@
 
     <!-- Studio Canvas & Controls Grid -->
     <div class="studio-grid">
-      <!-- Left: Interactive Mockup Canvas -->
+      <!-- Left: Interactive Mockup Canvas Stage (BIG PREVIEW) -->
       <div class="mockup-canvas-panel">
         <div class="canvas-top-tabs">
           <button 
@@ -23,14 +23,14 @@
             :class="{ active: currentView === 'front' }"
             @click="currentView = 'front'"
           >
-            FRONT MOCKUP
+            FRONT PREVIEW
           </button>
           <button 
             class="tab-btn font-tech" 
             :class="{ active: currentView === 'back' }"
             @click="currentView = 'back'"
           >
-            BACK MOCKUP
+            BACK PREVIEW
           </button>
           <button 
             v-if="additionalImages.length > 0"
@@ -55,13 +55,13 @@
           </div>
         </div>
 
-        <!-- The Canvas Stage -->
+        <!-- The Canvas Stage: Large Realistic Garment Preview -->
         <div class="mockup-stage" :style="{ backgroundColor: selectedColor.canvasBg }">
           <div class="apparel-wrapper">
-            <!-- Authentic Garment Blank -->
+            <!-- Authentic Garment Blank (Hoodie or Tee) -->
             <img 
               :src="currentMockupImage" 
-              alt="Apparel Mockup" 
+              alt="Apparel Mockup Preview" 
               class="apparel-base-img"
             />
 
@@ -81,7 +81,7 @@
                   <polyline points="17 8 12 3 7 8" stroke-width="2"/>
                   <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
                 </svg>
-                <span>Upload or select {{ currentView }} print design</span>
+                <span>No {{ currentView }} graphic uploaded yet</span>
               </div>
             </div>
           </div>
@@ -106,18 +106,18 @@
       <div class="spec-panel">
         <div class="spec-header-row">
           <h2 class="spec-title font-display">Drop Specifications</h2>
-          <span class="badge badge-emerald">Gemini AI Active</span>
+          <span class="badge badge-emerald">Real AI Generator</span>
         </div>
 
-        <!-- Dual Upload: Front and Back -->
+        <!-- Dual Upload: Front and Back with Proper File Previews -->
         <div class="upload-dual-boxes">
           <!-- Front Upload -->
           <div class="upload-card">
             <div class="upload-header">
-              <span class="upload-title font-tech">FRONT CHEST / GRAPHIC</span>
+              <span class="upload-title font-tech">FRONT IMAGE UPLOAD</span>
               <button v-if="frontDesign" @click="frontDesign = null" class="clear-btn">Remove</button>
             </div>
-            <label class="drop-zone">
+            <label class="drop-zone" :class="{ 'has-file': frontDesign }">
               <input type="file" accept="image/*" @change="onFileChange($event, 'front')" />
               <div v-if="!frontDesign" class="drop-prompt">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
@@ -125,19 +125,22 @@
                   <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
                   <polyline points="21 15 16 10 5 21" stroke-width="2"/>
                 </svg>
-                <span>Upload Front Graphic</span>
+                <span>Click to Upload Front</span>
               </div>
-              <img v-else :src="frontDesign" alt="Front Preview" class="upload-thumb" />
+              <div v-else class="thumb-container">
+                <img :src="frontDesign" alt="Front Graphic" class="upload-thumb" />
+                <span class="thumb-tag font-tech">FRONT LOADED</span>
+              </div>
             </label>
           </div>
 
           <!-- Back Upload -->
           <div class="upload-card">
             <div class="upload-header">
-              <span class="upload-title font-tech">BACK OVERSIZED PRINT</span>
+              <span class="upload-title font-tech">BACK IMAGE UPLOAD</span>
               <button v-if="backDesign" @click="backDesign = null" class="clear-btn">Remove</button>
             </div>
-            <label class="drop-zone">
+            <label class="drop-zone" :class="{ 'has-file': backDesign }">
               <input type="file" accept="image/*" @change="onFileChange($event, 'back')" />
               <div v-if="!backDesign" class="drop-prompt">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
@@ -145,9 +148,12 @@
                   <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
                   <polyline points="21 15 16 10 5 21" stroke-width="2"/>
                 </svg>
-                <span>Upload Back Graphic</span>
+                <span>Click to Upload Back</span>
               </div>
-              <img v-else :src="backDesign" alt="Back Preview" class="upload-thumb" />
+              <div v-else class="thumb-container">
+                <img :src="backDesign" alt="Back Graphic" class="upload-thumb" />
+                <span class="thumb-tag font-tech">BACK LOADED</span>
+              </div>
             </label>
           </div>
         </div>
@@ -169,11 +175,11 @@
           </div>
         </div>
 
-        <!-- Gemini AI Tools Section -->
+        <!-- AI Streetwear Studio Assistant -->
         <div class="gemini-ai-card">
           <div class="gemini-header">
-            <span class="gemini-title font-display">Gemini AI Studio Assistant</span>
-            <span class="gemini-badge font-tech">GEMINI 1.5 & IMAGEN</span>
+            <span class="gemini-title font-display">Tokyo Streetwear AI Studio</span>
+            <span class="gemini-badge font-tech">AUTHENTIC NAMING</span>
           </div>
 
           <div class="gemini-actions-row">
@@ -182,16 +188,16 @@
               type="button" 
               class="ai-action-btn font-tech" 
               :disabled="aiNameLoading"
-              @click="generateNameWithGemini"
+              @click="generateNameWithAi"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
                 <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/>
               </svg>
               <span v-if="!aiNameLoading">AUTO-GENERATE DRESS NAME</span>
-              <span v-else>ANALYZING ARTWORK...</span>
+              <span v-else>GENERATING VIA AI...</span>
             </button>
 
-            <!-- Gemini Image Generator -->
+            <!-- Image Generator -->
             <button 
               type="button" 
               class="ai-action-btn font-tech" 
@@ -203,7 +209,7 @@
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
-              <span>GENERATE IMAGE VIA GEMINI</span>
+              <span>GENERATE IMAGE VIA AI</span>
             </button>
           </div>
         </div>
@@ -245,7 +251,7 @@
           </div>
         </div>
 
-        <!-- PUBLISH BUTTON MOVED TO BOTTOM OF SPECIFICATIONS -->
+        <!-- PUBLISH BUTTON AT THE BOTTOM -->
         <div class="bottom-publish-section">
           <button 
             class="btn-publish-bottom font-tech" 
@@ -258,15 +264,15 @@
       </div>
     </div>
 
-    <!-- Gemini Image Generation Modal -->
+    <!-- Image Prompt Modal -->
     <div v-if="showImagePromptModal" class="modal-backdrop" @click.self="showImagePromptModal = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h2 class="font-display">Generate Graphic / Model Image (Gemini)</h2>
+          <h2 class="font-display">Generate Graphic / Model Image</h2>
           <button class="close-x" @click="showImagePromptModal = false">&times;</button>
         </div>
 
-        <form @submit.prevent="generateImageWithGemini" class="modal-form">
+        <form @submit.prevent="generateImageWithAi" class="modal-form">
           <div class="form-item">
             <label>Describe Graphic or Garment Prompt</label>
             <textarea 
@@ -289,8 +295,8 @@
           <div class="modal-actions">
             <button type="button" class="btn-cancel" @click="showImagePromptModal = false">Cancel</button>
             <button type="submit" class="btn-save font-tech" :disabled="aiImageLoading">
-              <span v-if="!aiImageLoading">GENERATE WITH GEMINI &rarr;</span>
-              <span v-else>CREATING IMAGE...</span>
+              <span v-if="!aiImageLoading">GENERATE ARTWORK &rarr;</span>
+              <span v-else>CREATING...</span>
             </button>
           </div>
         </form>
@@ -307,7 +313,7 @@ import { KOROKO_CATEGORIES } from '../data/categories.js';
 const categories = ref(KOROKO_CATEGORIES);
 const currentView = ref('front');
 
-// Authentic Koroko Garment Mockup Blanks (Black, White, Charcoal)
+// Authentic Koroko Garment Mockup Blanks
 const availableColors = [
   {
     name: 'Phantom Black',
@@ -334,7 +340,8 @@ const availableColors = [
 
 const selectedColor = ref(availableColors[0]);
 
-const frontDesign = ref('https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=80');
+// Initially empty so user can cleanly upload their own front & back images
+const frontDesign = ref(null);
 const backDesign = ref(null);
 const additionalImages = ref([]);
 
@@ -350,12 +357,12 @@ const aiImagePrompt = ref('Cyberpunk Tokyo typography graphic in monochrome stre
 const aiTargetSide = ref('front');
 
 const dropForm = ref({
-  title: 'SHIBUYA CYPHER OVERSIZED TEE',
+  title: 'SHIBUYA REBEL 240 GSM OVERSIZED TEE',
   category: 'oversized',
   retailPrice: 1499,
-  baseCost: 480,
+  baseCost: 285,
   printCost: 190,
-  description: 'Authentic KOROKO official drop. 240 GSM combed cotton with high-density streetwear DTF artwork.'
+  description: 'Crafted from heavy 240 GSM combed cotton with bio-wash finish and authentic high-density Japanese street calligraphy.'
 });
 
 const currentMockupImage = computed(() => {
@@ -422,21 +429,19 @@ const resetStudio = () => {
   aiGeneratedNote.value = '';
 };
 
-// 1. Gemini Auto Name Generator
-const generateNameWithGemini = async () => {
+// Auto Name Generator using Backend AI
+const generateNameWithAi = async () => {
   aiNameLoading.value = true;
   aiGeneratedNote.value = '';
 
   try {
-    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/gemini` : '/api/gemini';
-    const activeImage = frontDesign.value || backDesign.value || '';
+    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/gemini` : '/api/gemini';
 
     const res = await fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'generate-name',
-        imageData: activeImage,
         category: dropForm.value.category,
         prompt: dropForm.value.title
       })
@@ -448,25 +453,21 @@ const generateNameWithGemini = async () => {
       if (data.result.description) {
         dropForm.value.description = data.result.description;
       }
-      aiGeneratedNote.value = 'Generated by Gemini AI';
-    } else {
-      dropForm.value.title = 'TOKYO NOIR HEAVYWEIGHT TEE';
-      aiGeneratedNote.value = 'Generated (Local)';
+      aiGeneratedNote.value = 'Generated by Tokyo AI Director';
     }
   } catch (err) {
-    dropForm.value.title = 'NEO-TOKYO OVERSIZED HEAVYWEIGHT TEE';
-    aiGeneratedNote.value = 'Generated (Preset)';
+    console.warn('AI Generation error:', err.message);
   } finally {
     aiNameLoading.value = false;
   }
 };
 
-// 2. Gemini Image Generator
-const generateImageWithGemini = async () => {
+// Image Generator
+const generateImageWithAi = async () => {
   aiImageLoading.value = true;
 
   try {
-    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/gemini` : '/api/gemini';
+    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/gemini` : '/api/gemini';
     const res = await fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -488,11 +489,9 @@ const generateImageWithGemini = async () => {
         additionalImages.value.push(data.imageUrl);
       }
       showImagePromptModal.value = false;
-    } else {
-      alert('Could not generate image. Please check Gemini API Key.');
     }
   } catch (err) {
-    alert('Gemini Image generation error: ' + err.message);
+    alert('AI Image generation error: ' + err.message);
   } finally {
     aiImageLoading.value = false;
   }
@@ -651,16 +650,16 @@ const publishDrop = () => {
 .apparel-base-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: var(--radius-sm);
 }
 
 .printable-boundary {
   position: absolute;
-  top: 18%;
-  left: 24%;
-  width: 52%;
-  height: 58%;
+  top: 22%;
+  left: 26%;
+  width: 48%;
+  height: 52%;
   border: 1px dashed rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
@@ -778,7 +777,7 @@ const publishDrop = () => {
   border: 1px dashed var(--border-medium);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
-  height: 95px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -790,6 +789,10 @@ const publishDrop = () => {
 .drop-zone:hover {
   border-color: #ffffff;
   background: var(--bg-elevated);
+}
+.drop-zone.has-file {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 .drop-zone input[type="file"] {
   display: none;
@@ -804,10 +807,29 @@ const publishDrop = () => {
   text-align: center;
   padding: 6px;
 }
-.upload-thumb {
+.thumb-container {
   width: 100%;
   height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+.upload-thumb {
+  max-width: 90%;
+  max-height: 75px;
   object-fit: contain;
+}
+.thumb-tag {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 9px;
+  color: #34d399;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 
 /* Optional Add-on Images */
@@ -867,7 +889,7 @@ const publishDrop = () => {
   line-height: 14px;
 }
 
-/* Gemini AI Card */
+/* AI Card */
 .gemini-ai-card {
   background: linear-gradient(135deg, rgba(30, 30, 40, 0.6) 0%, rgba(15, 15, 20, 0.8) 100%);
   border: 1px solid var(--border-subtle);
