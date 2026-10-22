@@ -68,16 +68,7 @@
           <span class="nav-label">Earning</span>
         </router-link>
 
-        <div class="nav-section-label font-tech mt-2">STUDIO & VENDORS</div>
-
-        <router-link to="/design-upload" class="nav-item sub-nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
-            <polyline points="17 8 12 3 7 8" stroke-width="2"/>
-            <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
-          </svg>
-          <span class="nav-label">+ Drop Mockup Studio</span>
-        </router-link>
+        <div class="nav-section-label font-tech mt-2">INTEGRATIONS</div>
 
         <router-link to="/vendors" class="nav-item sub-nav-item" active-class="active">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">

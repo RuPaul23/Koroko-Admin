@@ -2,37 +2,37 @@
   <div class="payments-page">
     <div class="page-header">
       <div>
-        <h1 class="page-title font-display">PAYMENTS & RAZORPAY SETTLEMENTS</h1>
-        <p class="page-subtitle">Inspect live Razorpay gateway transactions, UPI captures, payment webhook events, and instant refunds</p>
+        <h1 class="page-title font-display">PAYMENTS & EARNINGS</h1>
+        <p class="page-subtitle">Live Razorpay gateway transactions, UPI captures, settlements, and refund logs</p>
       </div>
 
       <div class="gateway-badge">
         <span class="live-dot"></span>
-        <span>Razorpay Live Merchant: rzp_live_Tq69vbLQwn4hq9</span>
+        <span>Razorpay Live Gateway Active</span>
       </div>
     </div>
 
-    <!-- Settlement Overview -->
+    <!-- Settlement Overview (Dynamic from live payments) -->
     <div class="settlement-strip">
       <div class="strip-item">
-        <span class="strip-label font-tech">NET CAPTURED TODAY</span>
-        <span class="strip-val font-tech">&#8377;18,480</span>
-        <span class="strip-sub">Auto-settling to HDFC Primary Account</span>
+        <span class="strip-label font-tech">NET CAPTURED</span>
+        <span class="strip-val font-tech">&#8377;{{ totalCapturedAmount.toLocaleString('en-IN') }}</span>
+        <span class="strip-sub">Total verified customer payments</span>
       </div>
       <div class="strip-item">
         <span class="strip-label font-tech">GATEWAY SUCCESS RATE</span>
-        <span class="strip-val font-tech text-emerald">99.2%</span>
+        <span class="strip-val font-tech text-emerald">{{ successRate }}%</span>
         <span class="strip-sub">Zero downtime across UPI / Cards</span>
       </div>
       <div class="strip-item">
         <span class="strip-label font-tech">AVERAGE ORDER VALUE (AOV)</span>
-        <span class="strip-val font-tech">&#8377;1,890</span>
-        <span class="strip-sub">+12% vs last month</span>
+        <span class="strip-val font-tech">&#8377;{{ averageOrderValue.toLocaleString('en-IN') }}</span>
+        <span class="strip-sub">Based on live transaction volume</span>
       </div>
       <div class="strip-item">
-        <span class="strip-label font-tech">REFUND RESERVE</span>
-        <span class="strip-val font-tech text-muted">&#8377;1,599</span>
-        <span class="strip-sub">1 processed return</span>
+        <span class="strip-label font-tech">SETTLED TRANSACTIONS</span>
+        <span class="strip-val font-tech text-muted">{{ transactions.length }}</span>
+        <span class="strip-sub">Live gateway records</span>
       </div>
     </div>
 
@@ -96,10 +96,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const transactions = ref([]);
 const loading = ref(true);
+
+const totalCapturedAmount = computed(() => {
+  return transactions.value
+    .filter(t => t.status === 'captured' || t.status === 'paid')
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+});
+
+const averageOrderValue = computed(() => {
+  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid');
+  if (valid.length === 0) return 0;
+  return Math.round(totalCapturedAmount.value / valid.length);
+});
+
+const successRate = computed(() => {
+  if (transactions.value.length === 0) return 100;
+  const valid = transactions.value.filter(t => t.status === 'captured' || t.status === 'paid').length;
+  return Math.round((valid / transactions.value.length) * 100);
+});
 
 const fetchPayments = async () => {
   loading.value = true;

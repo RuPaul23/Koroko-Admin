@@ -7,18 +7,14 @@
         <p class="page-subtitle">Real-time overview of Koroko brand sales, inventory sync, and Printrove logistics</p>
       </div>
       <div class="header-actions">
-        <button class="action-btn-outline" @click="syncData">
+        <button class="action-btn-outline font-tech" @click="syncData">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke-width="2"/>
           </svg>
-          <span>Sync Live Catalog</span>
+          <span>SYNC CATALOG</span>
         </button>
-        <router-link to="/design-upload" class="action-btn-primary">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
-            <line x1="12" y1="5" x2="12" y2="19" stroke-width="2"/>
-            <line x1="5" y1="12" x2="19" y2="12" stroke-width="2"/>
-          </svg>
-          <span>Drop New T-Shirt Design</span>
+        <router-link to="/products" class="action-btn-primary font-tech">
+          <span>MANAGE STORE CATALOG &rarr;</span>
         </router-link>
       </div>
     </div>
@@ -27,38 +23,40 @@
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-top">
-          <span class="metric-label">TOTAL REVENUE</span>
-          <span class="badge badge-emerald">+18.4%</span>
+          <span class="metric-label font-tech">TOTAL REVENUE</span>
+          <span class="badge badge-emerald">Live</span>
         </div>
         <div class="metric-val font-tech">&#8377;{{ adminStore.metrics.totalRevenue.toLocaleString('en-IN') }}</div>
-        <div class="metric-footer">Razorpay settlement active • 0 pending chargebacks</div>
+        <div class="metric-footer font-tech">Razorpay live settlements verified</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-top">
-          <span class="metric-label">TOTAL ORDERS</span>
-          <span class="badge badge-cyan">42 orders</span>
+          <span class="metric-label font-tech">TOTAL ORDERS</span>
+          <span class="badge badge-cyan">{{ adminStore.orders.length }} orders</span>
         </div>
         <div class="metric-val font-tech">{{ adminStore.orders.length }}</div>
-        <div class="metric-footer">Across all 28 states & union territories</div>
+        <div class="metric-footer font-tech">Live orders synced from store</div>
       </div>
 
       <div class="metric-card alert-card">
         <div class="metric-top">
-          <span class="metric-label">PENDING FULFILLMENT</span>
-          <span class="badge badge-amber">Requires Action</span>
+          <span class="metric-label font-tech">PENDING FULFILLMENT</span>
+          <span class="badge" :class="pendingCount > 0 ? 'badge-amber' : 'badge-emerald'">
+            {{ pendingCount > 0 ? 'Requires Action' : 'All Clear' }}
+          </span>
         </div>
         <div class="metric-val font-tech">{{ pendingCount }}</div>
-        <div class="metric-footer">Waiting for Printrove merchant webhook release</div>
+        <div class="metric-footer font-tech">Pending approval for vendor dispatch</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-top">
-          <span class="metric-label">POD VENDORS CONNECTED</span>
-          <span class="badge badge-purple">Printrove Live</span>
+          <span class="metric-label font-tech">CATALOG DRESSES</span>
+          <span class="badge badge-purple">Printrove & Qikink</span>
         </div>
-        <div class="metric-val font-tech">3 Active</div>
-        <div class="metric-footer">API latency 210ms • 99.8% uptime</div>
+        <div class="metric-val font-tech">{{ adminStore.products.length }}</div>
+        <div class="metric-footer font-tech">Products synced from connected vendors</div>
       </div>
     </div>
 
@@ -140,11 +138,11 @@
 
         <div class="banner-design-link">
           <div class="banner-info">
-            <div class="banner-title font-display">T-Shirt Mockup Studio</div>
-            <div class="banner-subtitle">Upload front & back artwork to generate authentic Printrove drop products</div>
+            <div class="banner-title font-display">Vendor Apparel Synchronization</div>
+            <div class="banner-subtitle">Products and designs are fetched directly from Printrove & Qikink. Review margins, replace artwork, and push to store.</div>
           </div>
-          <router-link to="/design-upload" class="banner-btn font-tech">
-            LAUNCH STUDIO &rarr;
+          <router-link to="/products" class="banner-btn font-tech">
+            VIEW CATALOG ({{ adminStore.products.length }}) &rarr;
           </router-link>
         </div>
       </div>

@@ -7,9 +7,9 @@
       </div>
 
       <div class="header-actions">
-        <router-link to="/design-upload" class="action-btn-primary font-tech">
-          + DROP NEW PRODUCT
-        </router-link>
+        <button class="action-btn-primary font-tech" @click="refreshCatalog">
+          SYNC VENDOR DRESSES &rarr;
+        </button>
       </div>
     </div>
 
