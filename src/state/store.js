@@ -57,12 +57,11 @@ export const adminStore = reactive({
 export async function syncRealData() {
   adminStore.loading = true;
   try {
-    const backendUrl = import.meta.env.VITE_API_URL 
-      ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/real-data` 
-      : '/api/real-data';
+    const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    const baseUrl = isLocal ? 'https://admin.koroko.in/api/real-data' : '/api/real-data';
 
-    // 1. Fetch live products
-    const prodRes = await fetch(`${backendUrl}?type=products`);
+    // 1. Fetch live products from Printrove
+    const prodRes = await fetch(`${baseUrl}?type=products`);
     if (prodRes.ok) {
       const prodData = await prodRes.json();
       if (prodData.success && Array.isArray(prodData.products) && prodData.products.length > 0) {
@@ -72,7 +71,7 @@ export async function syncRealData() {
     }
 
     // 2. Fetch live orders
-    const orderRes = await fetch(`${backendUrl}?type=orders`);
+    const orderRes = await fetch(`${baseUrl}?type=orders`);
     if (orderRes.ok) {
       const orderData = await orderRes.json();
       if (orderData.success && Array.isArray(orderData.orders)) {

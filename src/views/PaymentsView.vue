@@ -96,55 +96,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
-const transactions = ref([
-  {
-    id: 'pay_P98fXka99qA',
-    customer: 'Aarav Sharma',
-    vpa: 'aarav@okaxis',
-    orderId: 'ORD-8941',
-    method: 'UPI (GPay)',
-    amount: 1499,
-    status: 'captured'
-  },
-  {
-    id: 'pay_P97aNm110Bx',
-    customer: 'Priya Iyer',
-    vpa: 'HDFC Netbanking',
-    orderId: 'ORD-8940',
-    method: 'Netbanking',
-    amount: 2598,
-    status: 'captured'
-  },
-  {
-    id: 'pay_P95kLk887Pz',
-    customer: 'Kabir Verma',
-    vpa: 'kabir@paytm',
-    orderId: 'ORD-8939',
-    method: 'UPI (Paytm)',
-    amount: 2899,
-    status: 'captured'
-  },
-  {
-    id: 'pay_P94xQw665Kl',
-    customer: 'Neha Singhania',
-    vpa: 'neha@icici',
-    orderId: 'ORD-8938',
-    method: 'UPI (PhonePe)',
-    amount: 1399,
-    status: 'captured'
-  },
-  {
-    id: 'pay_P93jHg443Op',
-    customer: 'Rohan Mehta',
-    vpa: '•••• 4920 (Mastercard)',
-    orderId: 'ORD-8937',
-    method: 'Credit Card',
-    amount: 1599,
-    status: 'refunded'
+const transactions = ref([]);
+const loading = ref(true);
+
+const fetchPayments = async () => {
+  loading.value = true;
+  try {
+    const backendUrl = import.meta.env.VITE_API_URL 
+      ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/real-data` 
+      : '/api/real-data';
+
+    const res = await fetch(`${backendUrl}?type=payments`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.payments) && data.payments.length > 0) {
+        transactions.value = data.payments;
+      }
+    }
+  } catch (err) {
+    console.warn('Payments fetch fallback:', err.message);
+  } finally {
+    loading.value = false;
   }
-]);
+};
+
+onMounted(() => {
+  fetchPayments();
+});
 
 const initiateRefund = (tx) => {
   if (confirm(`Process instant full refund of ₹${tx.amount} to ${tx.customer} via Razorpay?`)) {

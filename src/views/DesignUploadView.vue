@@ -3,40 +3,19 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">T-SHIRT MOCKUP & DESIGN STUDIO</h1>
-        <p class="page-subtitle">Upload high-resolution graphics, position prints on Front / Back 240 GSM mockups, or extract ZIP mockups</p>
+        <p class="page-subtitle">Upload Front, Back, and Optional dress angles to preview, set pricing, generate Tokyo titles via Groq AI, and push live</p>
       </div>
 
       <div class="header-actions">
-        <!-- ZIP Extractor Button for Qikink / Printrove mockup packs -->
-        <label class="btn-zip font-tech">
-          EXTRACT MOCKUPS ZIP
-          <input type="file" accept=".zip" @change="handleZipUpload" />
-        </label>
         <button class="btn-secondary font-tech" @click="resetStudio">
           RESET CANVAS
         </button>
       </div>
     </div>
 
-    <!-- Real Vendor Reference Mockup Selector Strip -->
-    <div class="preset-selector-strip">
-      <span class="preset-label font-tech">LIVE VENDOR MOCKUP PRESETS:</span>
-      <div class="preset-buttons">
-        <button 
-          v-for="p in vendorMockupPresets" 
-          :key="p.name"
-          class="preset-chip font-tech"
-          @click="loadPresetMockup(p)"
-        >
-          <span class="provider-tag">{{ p.provider }}</span>
-          {{ p.name }}
-        </button>
-      </div>
-    </div>
-
     <!-- Studio Canvas & Controls Grid -->
     <div class="studio-grid">
-      <!-- Left: Interactive Mockup Canvas Stage (BIG PREVIEW) -->
+      <!-- Left: Interactive Uploaded Mockup Preview Stage (BIG PREVIEW OF UPLOADED IMAGES) -->
       <div class="mockup-canvas-panel">
         <div class="canvas-top-tabs">
           <button 
@@ -44,81 +23,63 @@
             :class="{ active: currentView === 'front' }"
             @click="currentView = 'front'"
           >
-            FRONT PREVIEW
+            FRONT PREVIEW {{ frontDesign ? '(LOADED)' : '' }}
           </button>
           <button 
             class="tab-btn font-tech" 
             :class="{ active: currentView === 'back' }"
             @click="currentView = 'back'"
           >
-            BACK PREVIEW
+            BACK PREVIEW {{ backDesign ? '(LOADED)' : '' }}
           </button>
           <button 
             v-if="additionalImages.length > 0"
             class="tab-btn font-tech" 
-            :class="{ active: currentView === 'optional' }"
-            @click="currentView = 'optional'"
+            :class="{ active: currentView.startsWith('optional_') }"
+            @click="currentView = 'optional_0'"
           >
             ADDITIONAL ANGLES ({{ additionalImages.length }})
           </button>
-
-          <div class="color-palette-bar">
-            <span class="color-label font-tech">SHADE:</span>
-            <button 
-              v-for="color in availableColors" 
-              :key="color.name" 
-              class="color-dot"
-              :class="{ selected: selectedColor.name === color.name }"
-              :style="{ backgroundColor: color.hex }"
-              :title="color.name"
-              @click="selectedColor = color"
-            ></button>
-          </div>
         </div>
 
-        <!-- The Canvas Stage: Large Realistic Garment Preview (Dark Background, Clean Transparent Fit) -->
+        <!-- The Canvas Stage: Large Direct Preview of the uploaded garment image -->
         <div class="mockup-stage">
-          <div class="apparel-wrapper">
-            <!-- Authentic Garment Blank -->
-            <img 
-              :src="currentMockupImage" 
-              alt="Apparel Mockup Preview" 
-              class="apparel-base-img"
-            />
-
-            <!-- Printable Bounding Box -->
-            <div v-if="currentView !== 'optional'" class="printable-boundary">
-              <div 
-                v-if="currentArtwork" 
-                class="design-layer"
-                :style="artworkStyle"
-              >
-                <img :src="currentArtwork" alt="Printed Graphic" class="graphic-img" />
+          <div class="direct-preview-wrapper">
+            <div v-if="activePreviewImage" class="active-image-view">
+              <img 
+                :src="activePreviewImage" 
+                alt="Product Preview" 
+                class="direct-preview-img"
+              />
+              <div class="preview-badge-overlay font-tech">
+                {{ currentViewLabel.toUpperCase() }}
               </div>
+            </div>
 
-              <div v-else class="empty-dropzone-indicator">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
-                  <polyline points="17 8 12 3 7 8" stroke-width="2"/>
-                  <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
-                </svg>
-                <span>No {{ currentView }} graphic uploaded yet</span>
-              </div>
+            <div v-else class="empty-preview-prompt">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5"/>
+                <circle cx="8.5" cy="8.5" r="1.5" stroke-width="1.5"/>
+                <polyline points="21 15 16 10 5 21" stroke-width="1.5"/>
+              </svg>
+              <h3 class="font-display">No {{ currentView }} image uploaded</h3>
+              <p>Upload a high-resolution Front or Back garment photo on the right panel to preview here.</p>
             </div>
           </div>
         </div>
 
-        <div v-if="currentView !== 'optional'" class="canvas-controls-bar">
-          <div class="control-item">
-            <label>Scale: {{ designScale }}%</label>
-            <input type="range" min="30" max="140" v-model.number="designScale" />
-          </div>
-          <div class="control-item">
-            <label>Vertical Position: {{ designOffsetY }}px</label>
-            <input type="range" min="-100" max="120" v-model.number="designOffsetY" />
-          </div>
-          <button class="center-btn font-tech" @click="centerArtwork">
-            CENTER ARTWORK
+        <!-- Angle selector thumbnail row for additional images -->
+        <div v-if="additionalImages.length > 0 && currentView.startsWith('optional_')" class="optional-angles-bar">
+          <span class="font-tech text-xs text-muted">SELECT ANGLE:</span>
+          <button 
+            v-for="(img, idx) in additionalImages" 
+            :key="idx" 
+            class="angle-thumb-btn"
+            :class="{ active: currentView === 'optional_' + idx }"
+            @click="currentView = 'optional_' + idx"
+          >
+            <img :src="img" alt="Angle thumbnail" />
+            <span>Angle {{ idx + 1 }}</span>
           </button>
         </div>
       </div>
@@ -127,7 +88,6 @@
       <div class="spec-panel">
         <div class="spec-header-row">
           <h2 class="spec-title font-display">Drop Specifications</h2>
-          <span class="badge badge-emerald">Real AI Generator</span>
         </div>
 
         <!-- Dual Upload: Front and Back with Proper File Previews -->
@@ -196,15 +156,15 @@
           </div>
         </div>
 
-        <!-- AI Streetwear Studio Assistant -->
+        <!-- Groq AI Streetwear Auto-Naming Studio -->
         <div class="gemini-ai-card">
           <div class="gemini-header">
-            <span class="gemini-title font-display">Tokyo Streetwear AI Studio</span>
-            <span class="gemini-badge font-tech">AUTHENTIC NAMING</span>
+            <span class="gemini-title font-display">Tokyo Streetwear Naming Studio</span>
+            <span class="gemini-badge font-tech">GROQ AI</span>
           </div>
 
           <div class="gemini-actions-row">
-            <!-- Auto Name Generator -->
+            <!-- Auto Name Generator via Groq AI -->
             <button 
               type="button" 
               class="ai-action-btn font-tech" 
@@ -214,23 +174,8 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
                 <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/>
               </svg>
-              <span v-if="!aiNameLoading">AUTO-GENERATE DRESS NAME</span>
-              <span v-else>GENERATING VIA AI...</span>
-            </button>
-
-            <!-- Image Generator -->
-            <button 
-              type="button" 
-              class="ai-action-btn font-tech" 
-              :disabled="aiImageLoading"
-              @click="showImagePromptModal = true"
-            >
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-              </svg>
-              <span>GENERATE IMAGE VIA AI</span>
+              <span v-if="!aiNameLoading">GENERATE UNIQUE TITLE VIA GROQ AI</span>
+              <span v-else>GENERATING VIA GROQ AI...</span>
             </button>
           </div>
         </div>
@@ -242,7 +187,7 @@
               <label>Product Drop Title</label>
               <span v-if="aiGeneratedNote" class="ai-pill">{{ aiGeneratedNote }}</span>
             </div>
-            <input v-model="dropForm.title" type="text" placeholder="e.g. SHIBUYA NOIR OVERSIZED TEE" />
+            <input v-model="dropForm.title" type="text" placeholder="e.g. SHIBUYA NOIR 240 GSM OVERSIZED TEE" />
           </div>
 
           <!-- Category Selection fetched from koroko.in -->
@@ -255,14 +200,36 @@
             </select>
           </div>
 
+          <!-- Vendor Base Cost Breakdown -->
+          <div class="pricing-breakdown-card">
+            <div class="breakdown-title font-tech">VENDOR BASE COST (PRINTROVE / QIKINK)</div>
+            <div class="breakdown-grid">
+              <div class="breakdown-item">
+                <label>Blank Garment Cost (&#8377;)</label>
+                <input v-model.number="dropForm.baseCost" type="number" step="1" />
+              </div>
+              <div class="breakdown-item">
+                <label>DTG/DTF Print Cost (&#8377;)</label>
+                <input v-model.number="dropForm.printCost" type="number" step="1" />
+              </div>
+              <div class="breakdown-item">
+                <label>Total Vendor Cost</label>
+                <div class="vendor-total-val font-tech">&#8377;{{ (dropForm.baseCost || 0) + (dropForm.printCost || 0) }}</div>
+              </div>
+            </div>
+          </div>
+
           <div class="form-row-grid">
             <div class="form-row">
-              <label>Retail Price (&#8377;)</label>
+              <label>Retail Selling Price (&#8377;)</label>
               <input v-model.number="dropForm.retailPrice" type="number" />
             </div>
             <div class="form-row">
-              <label>Estimated Base Cost</label>
-              <div class="static-val font-tech">&#8377;{{ dropForm.baseCost + dropForm.printCost }}</div>
+              <label>Projected Profit Margin</label>
+              <div class="static-val font-tech text-emerald">
+                &#8377;{{ (dropForm.retailPrice || 0) - ((dropForm.baseCost || 0) + (dropForm.printCost || 0)) }}
+                ({{ projectedMargin }}%)
+              </div>
             </div>
           </div>
 
@@ -282,45 +249,6 @@
             PUBLISH TO KOROKO STORE &rarr;
           </button>
         </div>
-      </div>
-    </div>
-
-    <!-- Image Prompt Modal -->
-    <div v-if="showImagePromptModal" class="modal-backdrop" @click.self="showImagePromptModal = false">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2 class="font-display">Generate Graphic / Model Image</h2>
-          <button class="close-x" @click="showImagePromptModal = false">&times;</button>
-        </div>
-
-        <form @submit.prevent="generateImageWithAi" class="modal-form">
-          <div class="form-item">
-            <label>Describe Graphic or Garment Prompt</label>
-            <textarea 
-              v-model="aiImagePrompt" 
-              rows="3" 
-              placeholder="e.g. Cyberpunk Japanese kanji calligraphy poster, chrome textures, high contrast monochrome vector..."
-              required
-            ></textarea>
-          </div>
-
-          <div class="form-item">
-            <label>Apply Output To</label>
-            <select v-model="aiTargetSide">
-              <option value="front">Front Graphic</option>
-              <option value="back">Back Graphic</option>
-              <option value="optional">Add as Optional Photo</option>
-            </select>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" @click="showImagePromptModal = false">Cancel</button>
-            <button type="submit" class="btn-save font-tech" :disabled="aiImageLoading">
-              <span v-if="!aiImageLoading">GENERATE ARTWORK &rarr;</span>
-              <span v-else>CREATING...</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
@@ -360,92 +288,50 @@ const availableColors = [
   }
 ];
 
-const selectedColor = ref(availableColors[0]);
-
-// Real Qikink Extracted Mockups (Ready as Default Active Mockups)
-const frontDesign = ref('/mockups/qikink_extracted/Front_1_c_17.jpg');
-const backDesign = ref('/mockups/qikink_extracted/Back_2_c_17.jpg');
-const additionalImages = ref([
-  '/mockups/qikink_extracted/Left_Pocket_3_c_17.jpg',
-  '/mockups/qikink_extracted/default.jpg'
-]);
-
-// Real reference presets from Qikink & Printrove
-const vendorMockupPresets = [
-  {
-    name: 'Qikink Real Pack',
-    provider: 'Qikink',
-    front: '/mockups/qikink_extracted/Front_1_c_17.jpg',
-    back: '/mockups/qikink_extracted/Back_2_c_17.jpg',
-    extra: ['/mockups/qikink_extracted/Left_Pocket_3_c_17.jpg', '/mockups/qikink_extracted/default.jpg']
-  },
-  {
-    name: 'Printrove Heavy Oversized Tee',
-    provider: 'Printrove',
-    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/e5cef519-1e79-4945-8418-1b7d83807b91-mockup-1371-498-black-1792312333069.webp',
-    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/b4f09df2-40b0-49f2-a797-2f701d5f52fa-mockup-1371-499-black-1792312334325.webp',
-    extra: []
-  },
-  {
-    name: 'Printrove Street Hoodie',
-    provider: 'Printrove',
-    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001595/store-mockups/black/mockups/44177db7-c81b-468a-b850-252f2f3f7765-mockup-1370-502-black-1792312328135.webp',
-    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001595/store-mockups/black/mockups/9c9ee090-ffbc-40d9-b695-8d59fb49ba02-mockup-1370-503-black-1792312330107.webp',
-    extra: []
-  },
-  {
-    name: 'Printrove Baby Crop Tee',
-    provider: 'Printrove',
-    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/black/mockups/942c7225-b829-450f-a496-e3d1bc848da6-mockup-1393-498-black-1792312322304.webp',
-    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/black/mockups/c42283cb-f1be-4c4f-9556-9e8c338f05c4-mockup-1393-499-black-1792312324151.webp',
-    extra: []
-  }
-];
-
-const loadPresetMockup = (preset) => {
-  frontDesign.value = preset.front;
-  backDesign.value = preset.back;
-  additionalImages.value = [...preset.extra];
-  currentView.value = 'front';
-  zipStatus.value = `Loaded ${preset.name} reference mockups from ${preset.provider}!`;
-};
-
-const designScale = ref(80);
-const designOffsetY = ref(0);
+// No fake or predefined mockups by default. Pure user uploads.
+const frontDesign = ref(null);
+const backDesign = ref(null);
+const additionalImages = ref([]);
 
 // AI States
 const aiNameLoading = ref(false);
-const aiImageLoading = ref(false);
 const aiGeneratedNote = ref('');
-const showImagePromptModal = ref(false);
-const aiImagePrompt = ref('Cyberpunk Tokyo typography graphic in monochrome street style');
-const aiTargetSide = ref('front');
 
 const dropForm = ref({
-  title: 'SHIBUYA REBEL 240 GSM OVERSIZED TEE',
+  title: '',
   category: 'oversized',
   retailPrice: 1499,
   baseCost: 285,
   printCost: 190,
-  description: 'Crafted from heavy 240 GSM combed cotton with bio-wash finish and authentic high-density Japanese street calligraphy.'
+  description: ''
 });
 
-const currentMockupImage = computed(() => {
-  if (currentView.value === 'optional' && additionalImages.value.length > 0) {
-    return additionalImages.value[0];
+const projectedMargin = computed(() => {
+  const cogs = (dropForm.value.baseCost || 0) + (dropForm.value.printCost || 0);
+  const retail = dropForm.value.retailPrice || 0;
+  if (!retail) return 0;
+  return Math.round(((retail - cogs) / retail) * 100);
+});
+
+// Large preview of currently selected uploaded angle
+const activePreviewImage = computed(() => {
+  if (currentView.value === 'front') return frontDesign.value;
+  if (currentView.value === 'back') return backDesign.value;
+  if (currentView.value.startsWith('optional_')) {
+    const idx = parseInt(currentView.value.replace('optional_', ''), 10);
+    return additionalImages.value[idx] || null;
   }
-  return currentView.value === 'front' ? selectedColor.value.frontImage : selectedColor.value.backImage;
+  return null;
 });
 
-const currentArtwork = computed(() => {
-  return currentView.value === 'front' ? frontDesign.value : backDesign.value;
-});
-
-const artworkStyle = computed(() => {
-  return {
-    width: `${designScale.value}%`,
-    transform: `translateY(${designOffsetY.value}px)`
-  };
+const currentViewLabel = computed(() => {
+  if (currentView.value === 'front') return 'Front View';
+  if (currentView.value === 'back') return 'Back View';
+  if (currentView.value.startsWith('optional_')) {
+    const idx = parseInt(currentView.value.replace('optional_', ''), 10);
+    return `Additional Angle ${idx + 1}`;
+  }
+  return currentView.value;
 });
 
 const onFileChange = (e, side) => {
@@ -583,41 +469,6 @@ const generateNameWithAi = async () => {
   }
 };
 
-// Image Generator
-const generateImageWithAi = async () => {
-  aiImageLoading.value = true;
-
-  try {
-    const backendUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/gemini` : '/api/gemini';
-    const res = await fetch(backendUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'generate-image',
-        prompt: aiImagePrompt.value
-      })
-    });
-
-    const data = await res.json();
-    if (data.success && data.imageUrl) {
-      if (aiTargetSide.value === 'front') {
-        frontDesign.value = data.imageUrl;
-        currentView.value = 'front';
-      } else if (aiTargetSide.value === 'back') {
-        backDesign.value = data.imageUrl;
-        currentView.value = 'back';
-      } else {
-        additionalImages.value.push(data.imageUrl);
-      }
-      showImagePromptModal.value = false;
-    }
-  } catch (err) {
-    alert('AI Image generation error: ' + err.message);
-  } finally {
-    aiImageLoading.value = false;
-  }
-};
-
 const onCategorySelect = () => {
   const cat = categories.value.find(c => c.id === dropForm.value.category);
   if (cat && !dropForm.value.description) {
@@ -628,17 +479,17 @@ const onCategorySelect = () => {
 const publishDrop = () => {
   const newProduct = {
     id: 'koroko-' + Date.now(),
-    title: dropForm.value.title,
+    title: dropForm.value.title || 'KOROKO LIMITED TOKYO PIECE',
     category: dropForm.value.category,
-    colorways: [selectedColor.value.name],
+    colorways: ['Custom Drop'],
     baseCost: dropForm.value.baseCost,
     printCost: dropForm.value.printCost,
     retailPrice: dropForm.value.retailPrice,
     mrp: Math.round(dropForm.value.retailPrice * 1.6),
-    margin: `${Math.round(((dropForm.value.retailPrice - (dropForm.value.baseCost + dropForm.value.printCost)) / dropForm.value.retailPrice) * 100)}%`,
+    margin: `${projectedMargin.value}%`,
     active: true,
-    mockupFront: selectedColor.value.frontImage,
-    mockupBack: selectedColor.value.backImage,
+    mockupFront: frontDesign.value || '',
+    mockupBack: backDesign.value || frontDesign.value || '',
     additionalImages: [...additionalImages.value]
   };
 
@@ -852,65 +703,152 @@ const publishDrop = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 480px;
+  min-height: 520px;
   position: relative;
   overflow: hidden;
   background: #09090b;
-  border: 1px solid var(--border-ultra-subtle);
+  border: 1px solid var(--border-subtle);
 }
 
-.apparel-wrapper {
-  position: relative;
-  width: 380px;
-  height: 460px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.apparel-base-img {
+.direct-preview-wrapper {
   width: 100%;
   height: 100%;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.active-image-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.direct-preview-img {
+  max-width: 100%;
+  max-height: 480px;
   object-fit: contain;
   border-radius: var(--radius-sm);
-  background: transparent;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-.printable-boundary {
+.preview-badge-overlay {
   position: absolute;
-  top: 22%;
-  left: 26%;
-  width: 48%;
-  height: 52%;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  pointer-events: none;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 4px;
 }
 
-.design-layer {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-.graphic-img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.empty-dropzone-indicator {
+.empty-preview-prompt {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 11px;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
   text-align: center;
-  padding: 10px;
+  padding: 40px 20px;
+}
+.empty-preview-prompt svg {
+  color: #3f3f46;
+}
+.empty-preview-prompt h3 {
+  font-size: 18px;
+  color: #e4e4e7;
+  letter-spacing: 0.05em;
+}
+.empty-preview-prompt p {
+  font-size: 12px;
+  color: #71717a;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.optional-angles-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 0 0;
+  border-top: 1px solid var(--border-ultra-subtle);
+  overflow-x: auto;
+}
+.angle-thumb-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #a1a1aa;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.angle-thumb-btn img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.angle-thumb-btn.active {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: #27272a;
+}
+
+.pricing-breakdown-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.breakdown-title {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.breakdown-item label {
+  font-size: 10.5px;
+  color: #a1a1aa;
+}
+.breakdown-item input {
+  background: #141416;
+  border: 1px solid #27272a;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.vendor-total-val {
+  font-size: 13px;
+  color: #f59e0b;
+  font-weight: 700;
+  padding-top: 6px;
 }
 
 .canvas-controls-bar {

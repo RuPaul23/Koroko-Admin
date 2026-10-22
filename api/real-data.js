@@ -42,11 +42,14 @@ export default async function handler(req, res) {
 
   const { type } = req.query || {};
   const printroveToken = process.env.PRINTROVE_ACCESS_TOKEN || '';
+  const rzpKey = process.env.RAZORPAY_KEY_ID || 'rzp_live_Tq69vbLQwn4hq9';
+  const rzpSecret = process.env.RAZORPAY_KEY_SECRET || 'Fvq5r461iBKM6KxgdnE5mp5y';
 
   try {
     // 1. Fetch Real Products from Printrove API
     if (type === 'products' || !type) {
-      const response = await fetch(`${PRINTROVE_BASE_URL}/products?per_page=50`, {
+      // Printrove requires per_page <= 20
+      const response = await fetch(`${PRINTROVE_BASE_URL}/products?per_page=20`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${printroveToken}`
@@ -56,7 +59,7 @@ export default async function handler(req, res) {
       const data = await response.json();
       const rawProducts = data.products || [];
 
-      // Fetch detail mockups for the live catalog
+      // Fetch detail mockups and variants for the live catalog
       const detailedProducts = await Promise.all(
         rawProducts.map(async (p) => {
           try {
@@ -67,7 +70,7 @@ export default async function handler(req, res) {
               }
             });
             const detailData = await detailRes.json();
-            const prod = detailData.product || {};
+            const prod = detailData.product || p;
 
             // Map category to Koroko Store hierarchy
             const nameLower = (prod.name || p.name || '').toLowerCase();
@@ -79,12 +82,14 @@ export default async function handler(req, res) {
             else if (nameLower.includes('bottle')) category = 'bottles';
             else if (nameLower.includes('kid')) category = 'kids';
 
-            const frontImg = prod.mockup?.front_mockup || prod.sample_images?.[0] || '';
-            const backImg = prod.mockup?.back_mockup || prod.sample_images?.[1] || frontImg;
+            const frontImg = prod.mockup?.front_mockup || p.mockup?.front_mockup || prod.sample_images?.[0] || '';
+            const backImg = prod.mockup?.back_mockup || p.mockup?.back_mockup || prod.sample_images?.[1] || frontImg;
 
-            const baseCost = Number(prod.base_price || 285);
-            const printCost = Number(prod.print_cost || 190);
-            const retailPrice = category === 'hoodies' ? 1499 : (category === 'croptops' ? 599 : (category === 'masks' ? 299 : 1499));
+            // Extract real base costs from variants
+            const sampleVariant = prod.variants?.[0] || {};
+            const baseCost = Number(sampleVariant.base_price || prod.base_price || 285);
+            const printCost = Number(sampleVariant.print_cost || prod.print_cost || 190);
+            const retailPrice = Number(sampleVariant.selling_price || (category === 'hoodies' ? 1499 : (category === 'croptops' ? 599 : (category === 'masks' ? 299 : 1499))));
 
             return {
               id: String(p.id),
@@ -94,11 +99,11 @@ export default async function handler(req, res) {
               printCost,
               retailPrice,
               mrp: Math.round(retailPrice * 1.8),
-              margin: `${Math.round(((retailPrice - (baseCost + printCost)) / retailPrice) * 100)}%`,
+              margin: `${Math.round(((retailPrice - (baseCost + printCost)) / (retailPrice || 1)) * 100)}%`,
               active: true,
               mockupFront: frontImg,
               mockupBack: backImg,
-              colorways: prod.variants ? [...new Set(prod.variants.map(v => v.color).filter(Boolean))] : ['Standard']
+              colorways: prod.variants ? [...new Set(prod.variants.map(v => v.product?.color || v.color_normalized?.name || v.color).filter(Boolean))] : ['Standard']
             };
           } catch (e) {
             return {
@@ -111,8 +116,8 @@ export default async function handler(req, res) {
               mrp: 2499,
               margin: '68%',
               active: true,
-              mockupFront: '',
-              mockupBack: '',
+              mockupFront: p.mockup?.front_mockup || '',
+              mockupBack: p.mockup?.back_mockup || '',
               colorways: ['Standard']
             };
           }
@@ -124,7 +129,7 @@ export default async function handler(req, res) {
 
     // 2. Fetch Real Orders & Pending Queue from Printrove API
     if (type === 'orders') {
-      const response = await fetch(`${PRINTROVE_BASE_URL}/orders?per_page=50`, {
+      const response = await fetch(`${PRINTROVE_BASE_URL}/orders?per_page=20`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${printroveToken}`
@@ -154,6 +159,49 @@ export default async function handler(req, res) {
       }));
 
       return res.status(200).json({ success: true, orders: realOrders });
+    }
+
+    // 3. Fetch Real Payments & Razorpay Gateway Transactions
+    if (type === 'payments') {
+      const authHeader = 'Basic ' + Buffer.from(`${rzpKey}:${rzpSecret}`).toString('base64');
+      
+      // Fetch both orders and payments from Razorpay
+      const [rzpOrdersRes, rzpPaymentsRes] = await Promise.all([
+        fetch('https://api.razorpay.com/v1/orders?count=25', { headers: { Authorization: authHeader } }),
+        fetch('https://api.razorpay.com/v1/payments?count=25', { headers: { Authorization: authHeader } })
+      ]);
+
+      const rzpOrdersData = await rzpOrdersRes.json();
+      const rzpPaymentsData = await rzpPaymentsRes.json();
+
+      const paymentItems = (rzpPaymentsData.items || []).map(p => ({
+        id: p.id,
+        customer: p.notes?.customerName || p.email || 'Direct Buyer',
+        email: p.email || '',
+        phone: p.contact || '',
+        vpa: p.vpa || p.wallet || p.bank || p.method || 'Razorpay',
+        orderId: p.notes?.orderId || p.order_id || 'KKO-DIRECT',
+        method: p.method ? p.method.toUpperCase() : 'UPI',
+        amount: Math.round(Number(p.amount || 0) / 100),
+        status: p.status || 'captured',
+        date: p.created_at ? new Date(p.created_at * 1000).toLocaleString('en-IN') : new Date().toISOString()
+      }));
+
+      const orderItems = (rzpOrdersData.items || []).map(o => ({
+        id: o.id,
+        customer: o.notes?.customerName || 'Direct Customer',
+        email: o.notes?.customerEmail || '',
+        phone: o.notes?.customerPhone || '',
+        vpa: 'Razorpay Gateway',
+        orderId: o.notes?.orderId || o.receipt || o.id,
+        method: 'GATEWAY ORDER',
+        amount: Math.round(Number(o.amount || 0) / 100),
+        status: o.status === 'paid' ? 'captured' : o.status,
+        date: o.created_at ? new Date(o.created_at * 1000).toLocaleString('en-IN') : new Date().toISOString()
+      }));
+
+      const combined = paymentItems.length > 0 ? paymentItems : orderItems;
+      return res.status(200).json({ success: true, payments: combined });
     }
 
     // 3. Grant / Dispatch Order in Real-Time to Printrove or Qikink
