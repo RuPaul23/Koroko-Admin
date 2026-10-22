@@ -3,12 +3,33 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">T-SHIRT MOCKUP & DESIGN STUDIO</h1>
-        <p class="page-subtitle">Upload high-resolution graphics, position prints on Front / Back 240 GSM mockups, and publish live drops</p>
+        <p class="page-subtitle">Upload high-resolution graphics, position prints on Front / Back 240 GSM mockups, or extract ZIP mockups</p>
       </div>
 
       <div class="header-actions">
+        <!-- ZIP Extractor Button for Qikink / Printrove mockup packs -->
+        <label class="btn-zip font-tech">
+          EXTRACT MOCKUPS ZIP
+          <input type="file" accept=".zip" @change="handleZipUpload" />
+        </label>
         <button class="btn-secondary font-tech" @click="resetStudio">
           RESET CANVAS
+        </button>
+      </div>
+    </div>
+
+    <!-- Real Vendor Reference Mockup Selector Strip -->
+    <div class="preset-selector-strip">
+      <span class="preset-label font-tech">LIVE VENDOR MOCKUP PRESETS:</span>
+      <div class="preset-buttons">
+        <button 
+          v-for="p in vendorMockupPresets" 
+          :key="p.name"
+          class="preset-chip font-tech"
+          @click="loadPresetMockup(p)"
+        >
+          <span class="provider-tag">{{ p.provider }}</span>
+          {{ p.name }}
         </button>
       </div>
     </div>
@@ -55,10 +76,10 @@
           </div>
         </div>
 
-        <!-- The Canvas Stage: Large Realistic Garment Preview -->
-        <div class="mockup-stage" :style="{ backgroundColor: selectedColor.canvasBg }">
+        <!-- The Canvas Stage: Large Realistic Garment Preview (Dark Background, Clean Transparent Fit) -->
+        <div class="mockup-stage">
           <div class="apparel-wrapper">
-            <!-- Authentic Garment Blank (Hoodie or Tee) -->
+            <!-- Authentic Garment Blank -->
             <img 
               :src="currentMockupImage" 
               alt="Apparel Mockup Preview" 
@@ -312,8 +333,9 @@ import { KOROKO_CATEGORIES } from '../data/categories.js';
 
 const categories = ref(KOROKO_CATEGORIES);
 const currentView = ref('front');
+const zipStatus = ref('');
 
-// Authentic Koroko Garment Mockup Blanks
+// Authentic Koroko Garment Mockup Blanks (Black, White, Navy Blue)
 const availableColors = [
   {
     name: 'Phantom Black',
@@ -340,10 +362,53 @@ const availableColors = [
 
 const selectedColor = ref(availableColors[0]);
 
-// Initially empty so user can cleanly upload their own front & back images
-const frontDesign = ref(null);
-const backDesign = ref(null);
-const additionalImages = ref([]);
+// Real Qikink Extracted Mockups (Ready as Default Active Mockups)
+const frontDesign = ref('/mockups/qikink_extracted/Front_1_c_17.jpg');
+const backDesign = ref('/mockups/qikink_extracted/Back_2_c_17.jpg');
+const additionalImages = ref([
+  '/mockups/qikink_extracted/Left_Pocket_3_c_17.jpg',
+  '/mockups/qikink_extracted/default.jpg'
+]);
+
+// Real reference presets from Qikink & Printrove
+const vendorMockupPresets = [
+  {
+    name: 'Qikink Real Pack',
+    provider: 'Qikink',
+    front: '/mockups/qikink_extracted/Front_1_c_17.jpg',
+    back: '/mockups/qikink_extracted/Back_2_c_17.jpg',
+    extra: ['/mockups/qikink_extracted/Left_Pocket_3_c_17.jpg', '/mockups/qikink_extracted/default.jpg']
+  },
+  {
+    name: 'Printrove Heavy Oversized Tee',
+    provider: 'Printrove',
+    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/e5cef519-1e79-4945-8418-1b7d83807b91-mockup-1371-498-black-1792312333069.webp',
+    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001648/store-mockups/black/mockups/b4f09df2-40b0-49f2-a797-2f701d5f52fa-mockup-1371-499-black-1792312334325.webp',
+    extra: []
+  },
+  {
+    name: 'Printrove Street Hoodie',
+    provider: 'Printrove',
+    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001595/store-mockups/black/mockups/44177db7-c81b-468a-b850-252f2f3f7765-mockup-1370-502-black-1792312328135.webp',
+    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001595/store-mockups/black/mockups/9c9ee090-ffbc-40d9-b695-8d59fb49ba02-mockup-1370-503-black-1792312330107.webp',
+    extra: []
+  },
+  {
+    name: 'Printrove Baby Crop Tee',
+    provider: 'Printrove',
+    front: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/black/mockups/942c7225-b829-450f-a496-e3d1bc848da6-mockup-1393-498-black-1792312322304.webp',
+    back: 'https://cdn.printrove.com/merchants/300632/templates/1001001622/store-mockups/black/mockups/c42283cb-f1be-4c4f-9556-9e8c338f05c4-mockup-1393-499-black-1792312324151.webp',
+    extra: []
+  }
+];
+
+const loadPresetMockup = (preset) => {
+  frontDesign.value = preset.front;
+  backDesign.value = preset.back;
+  additionalImages.value = [...preset.extra];
+  currentView.value = 'front';
+  zipStatus.value = `Loaded ${preset.name} reference mockups from ${preset.provider}!`;
+};
 
 const designScale = ref(80);
 const designOffsetY = ref(0);
@@ -415,6 +480,61 @@ const removeOptionalImage = (index) => {
   additionalImages.value.splice(index, 1);
 };
 
+// Client-side ZIP extraction for Qikink / Printrove downloaded mockup packs
+const handleZipUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!window.JSZip) {
+    alert('ZIP extraction library is loading, please try again in a moment.');
+    return;
+  }
+
+  zipStatus.value = `Extracting images from "${file.name}"...`;
+
+  try {
+    const zip = await window.JSZip.loadAsync(file);
+    const extracted = [];
+
+    const entries = Object.keys(zip.files);
+    for (const filename of entries) {
+      const entry = zip.files[filename];
+      if (!entry.dir && /\.(png|jpg|jpeg|webp)$/i.test(filename) && !filename.startsWith('__MACOSX')) {
+        const blob = await entry.async('blob');
+        const url = URL.createObjectURL(blob);
+        extracted.push({ name: filename, url });
+      }
+    }
+
+    if (extracted.length > 0) {
+      // Intelligently assign front and back based on filename, or sequential order
+      const front = extracted.find(f => /front|01/i.test(f.name)) || extracted[0];
+      const back = extracted.find(f => /back|02/i.test(f.name)) || extracted[1];
+
+      if (front) {
+        frontDesign.value = front.url;
+        currentView.value = 'front';
+      }
+      if (back) {
+        backDesign.value = back.url;
+      }
+
+      // Add remaining extracted images as additional lifestyle/angle images
+      extracted.forEach(item => {
+        if (item !== front && item !== back) {
+          additionalImages.value.push(item.url);
+        }
+      });
+
+      zipStatus.value = `Extracted ${extracted.length} high-resolution mockup images! Assigned Front & Back prints. The ZIP file was discarded.`;
+    } else {
+      zipStatus.value = 'No compatible images (PNG/JPG/WEBP) found in the ZIP archive.';
+    }
+  } catch (err) {
+    zipStatus.value = `Failed to extract ZIP: ${err.message}`;
+  }
+};
+
 const centerArtwork = () => {
   designOffsetY.value = 0;
   designScale.value = 80;
@@ -427,6 +547,7 @@ const resetStudio = () => {
   designOffsetY.value = 0;
   designScale.value = 80;
   aiGeneratedNote.value = '';
+  zipStatus.value = '';
 };
 
 // Auto Name Generator using Backend AI
@@ -540,6 +661,59 @@ const publishDrop = () => {
   flex-wrap: wrap;
   gap: 16px;
 }
+
+.preset-selector-strip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 18px;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #71717a;
+  font-weight: 700;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #e4e4e7;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:hover {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #ffffff;
+}
+
+.provider-tag {
+  background: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
 .page-title {
   font-size: 24px;
   letter-spacing: 0.12em;
@@ -548,6 +722,34 @@ const publishDrop = () => {
 .page-subtitle {
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-zip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-zip:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #34d399;
+}
+.btn-zip input {
+  display: none;
 }
 
 .btn-secondary {
@@ -562,6 +764,23 @@ const publishDrop = () => {
 .btn-secondary:hover {
   background: var(--bg-elevated);
   color: #ffffff;
+}
+
+.zip-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  color: #34d399;
+  font-size: 12px;
+}
+.zip-close {
+  font-size: 18px;
+  color: #34d399;
+  cursor: pointer;
 }
 
 /* Studio Grid */
@@ -636,6 +855,7 @@ const publishDrop = () => {
   min-height: 480px;
   position: relative;
   overflow: hidden;
+  background: #09090b;
   border: 1px solid var(--border-ultra-subtle);
 }
 
@@ -652,6 +872,7 @@ const publishDrop = () => {
   height: 100%;
   object-fit: contain;
   border-radius: var(--radius-sm);
+  background: transparent;
 }
 
 .printable-boundary {
