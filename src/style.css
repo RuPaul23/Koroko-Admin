@@ -1,0 +1,142 @@
+/* ==========================================================================
+   KOROKO ADMIN — Modern Luxury Minimalist Dark Theme
+   Matching https://koroko.in Design System
+   ========================================================================== */
+
+:root {
+  --font-display: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono-tech: 'Space Grotesk', monospace, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Deep Black Luxury Palette */
+  --bg-pitch: #000000;
+  --bg-deep: #08080a;
+  --bg-surface: #0f0f13;
+  --bg-elevated: #16161b;
+  --bg-card: #121217;
+  --bg-card-hover: #1a1a22;
+  
+  --border-ultra-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.16);
+  --border-solid: #ffffff;
+
+  --text-white: #ffffff;
+  --text-subtle: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-dark: #000000;
+
+  --accent-white: #ffffff;
+  --accent-black: #000000;
+  --accent-brand: #ff3366;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-purple: #8b5cf6;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.12);
+  --shadow-glow: 0 0 30px rgba(255, 255, 255, 0.08);
+
+  --sidebar-width: 260px;
+  --header-height: 68px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-pitch);
+  color: var(--text-white);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  color: var(--text-white);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #27272e;
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f4a;
+}
+
+/* Typography Helpers */
+.font-display { font-family: var(--font-display); }
+.font-tech { font-family: var(--font-mono-tech); }
+
+/* Global Utilities */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.badge-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.badge-rose {
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+.badge-purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.badge-cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
