@@ -3,12 +3,6 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">PAYMENTS & EARNINGS</h1>
-        <p class="page-subtitle">Live Razorpay gateway transactions, UPI captures, settlements, and refund logs</p>
-      </div>
-
-      <div class="gateway-badge">
-        <span class="live-dot"></span>
-        <span>Razorpay Live Gateway Active</span>
       </div>
     </div>
 

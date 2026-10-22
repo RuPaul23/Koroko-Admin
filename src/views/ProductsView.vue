@@ -3,68 +3,35 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">PRODUCTS & CATEGORY CATALOG</h1>
-        <p class="page-subtitle">Manage all live apparel drops, Printrove catalog SKUs, and category collections (His Edit, Her Edit, Oversized, Hoodies)</p>
-      </div>
-
-      <div class="header-actions">
-        <button class="action-btn-primary font-tech" @click="refreshCatalog">
-          SYNC VENDOR DRESSES &rarr;
-        </button>
+        <p class="page-subtitle">Manage all live apparel drops, Printrove & Qikink catalog SKUs, and categories</p>
       </div>
     </div>
 
-    <!-- Vendor Source Segment Tabs & Controls -->
-    <div class="vendor-segment-bar">
-      <div class="segment-tabs">
-        <button 
-          class="segment-tab font-tech" 
-          :class="{ active: selectedVendorSegment === 'all' }"
-          @click="selectedVendorSegment = 'all'"
-        >
-          ALL PRODUCTS ({{ adminStore.products.length }})
-        </button>
-        <button 
-          class="segment-tab font-tech" 
-          :class="{ active: selectedVendorSegment === 'printrove' }"
-          @click="selectedVendorSegment = 'printrove'"
-        >
-          PRINTROVE CATALOG ({{ printroveProductsCount }})
-        </button>
-        <button 
-          class="segment-tab font-tech" 
-          :class="{ active: selectedVendorSegment === 'qikink' }"
-          @click="selectedVendorSegment = 'qikink'"
-        >
-          QIKINK CATALOG ({{ qikinkProductsCount }})
-        </button>
+    <!-- Vendor & Category Filter Controls -->
+    <div class="catalog-filters-row">
+      <div class="filter-dropdown-group">
+        <label class="font-tech filter-lbl">VENDOR:</label>
+        <select v-model="selectedVendorSegment" class="vendor-dropdown font-tech">
+          <option value="all">All Vendors ({{ adminStore.products.length }})</option>
+          <option value="printrove">Printrove ({{ printroveProductsCount }})</option>
+          <option value="qikink">Qikink ({{ qikinkProductsCount }})</option>
+        </select>
       </div>
 
-      <div class="sync-actions">
-        <button class="btn-sync-vendor font-tech" @click="refreshCatalog">
-          SYNC VENDOR DRESSES &rarr;
-        </button>
+      <div class="filter-dropdown-group">
+        <label class="font-tech filter-lbl">CATEGORY:</label>
+        <select v-model="selectedCategoryFilter" class="vendor-dropdown font-tech">
+          <option value="all">All Categories</option>
+          <option v-for="cat in categories.filter(c => c.id !== 'all')" :key="cat.id" :value="cat.id">
+            {{ cat.name }}
+          </option>
+        </select>
       </div>
-    </div>
 
-    <!-- Category Circles Story Strip (Matching https://koroko.in) -->
-    <div class="category-stories-card">
-      <div class="strip-header">
-        <span class="font-tech text-muted text-xs">LIVE STORE CATEGORIES & EDITIONS</span>
-        <span class="badge badge-emerald">Real-Time Sync</span>
-      </div>
-      <div class="circles-row">
-        <div 
-          v-for="cat in categories" 
-          :key="cat.id" 
-          class="circle-item"
-          :class="{ active: selectedCategoryFilter === cat.id }"
-          @click="selectedCategoryFilter = cat.id"
-        >
-          <div class="circle-avatar">
-            <img :src="cat.image" :alt="cat.name" />
-          </div>
-          <span class="circle-label font-tech">{{ cat.name.toUpperCase() }}</span>
-        </div>
+      <div class="sync-actions-group">
+        <button class="btn-sync-clean font-tech" @click="refreshCatalog">
+          SYNC CATALOG
+        </button>
       </div>
     </div>
 
@@ -349,85 +316,61 @@ const deleteProduct = async (product) => {
   background: #e4e4e7;
 }
 
-/* Category Circles Story Strip */
-.category-stories-card {
+/* Catalog Filters Row */
+.catalog-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 14px 20px;
+  flex-wrap: wrap;
 }
-.strip-header {
+
+.filter-dropdown-group {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
-.text-xs {
-  font-size: 10.5px;
+.filter-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
   letter-spacing: 0.08em;
 }
 
-.circles-row {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
-.circles-row::-webkit-scrollbar {
-  height: 4px;
-}
-.circles-row::-webkit-scrollbar-track {
-  background: transparent;
-}
-.circles-row::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-.circle-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-.circle-avatar {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  border: 2px solid var(--border-subtle);
-  overflow: hidden;
-  background: #000000;
-  padding: 2px;
-  transition: all 0.2s;
-}
-.circle-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.circle-item.active .circle-avatar, .circle-item:hover .circle-avatar {
-  border-color: #ffffff;
-  transform: scale(1.08);
-}
-.circle-label {
-  font-size: 10px;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-}
-.circle-item.active .circle-label {
+.vendor-dropdown {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   color: #ffffff;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vendor-dropdown:focus {
+  border-color: #ffffff;
+}
+
+.sync-actions-group {
+  margin-left: auto;
+}
+.btn-sync-clean {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-sync-clean:hover {
+  background: #e4e4e7;
 }
 
 /* Table Card */

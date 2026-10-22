@@ -10,8 +10,7 @@
             <span class="brand-sub">ADMIN PORTAL</span>
           </div>
         </div>
-        <div class="live-status-pill">
-          <span class="pulse-dot"></span>
+        <div class="live-status-pill font-tech">
           <span>LIVE</span>
         </div>
       </div>
@@ -57,7 +56,6 @@
             <polyline points="12 6 12 12 16 14" stroke-width="2"/>
           </svg>
           <span class="nav-label">Pending</span>
-          <span class="nav-badge alert" v-if="pendingCount > 0">{{ pendingCount }}</span>
         </router-link>
 
         <router-link to="/payments" class="nav-item" active-class="active">
@@ -146,27 +144,13 @@
           </router-link>
           <router-link to="/pending" class="top-nav-btn font-tech" active-class="active">
             PENDING
-            <span v-if="pendingCount > 0" class="top-pill-badge">{{ pendingCount }}</span>
           </router-link>
           <router-link to="/payments" class="top-nav-btn font-tech" active-class="active">
             EARNING
           </router-link>
         </nav>
 
-        <!-- Right Quick Actions -->
-        <div class="topbar-actions">
-          <div class="system-sync-pill font-tech">
-            <span class="sync-dot"></span>
-            <span class="sync-text">Live Sync</span>
-          </div>
-          <a href="https://koroko.in" target="_blank" class="topbar-icon-btn" title="View Customer Store (koroko.in)">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke-width="2"/>
-              <polyline points="15 3 21 3 21 9" stroke-width="2"/>
-              <line x1="10" y1="14" x2="21" y2="3" stroke-width="2"/>
-            </svg>
-          </a>
-        </div>
+        <!-- Right Clean Empty spacer or minimal indicator if needed -->
       </header>
 
       <!-- View Content -->
@@ -217,7 +201,6 @@
               <circle cx="12" cy="12" r="10" stroke-width="2"/>
               <polyline points="12 6 12 12 16 14" stroke-width="2"/>
             </svg>
-            <span v-if="pendingCount > 0" class="m-badge-dot"></span>
           </div>
           <span class="m-label font-tech">Pending</span>
         </router-link>
@@ -554,10 +537,12 @@ const handleLogout = async () => {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
-  padding: 6px 14px;
+  padding: 0 14px;
+  height: 38px;
   width: 280px;
   max-width: 100%;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 .topbar-search-box:focus-within {
   border-color: #ffffff;
@@ -571,9 +556,12 @@ const handleLogout = async () => {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 11.5px;
+  font-size: 12px;
   color: #ffffff;
   width: 100%;
+  height: 100%;
+  padding: 0;
+  line-height: 38px;
 }
 .topbar-search-input::placeholder {
   color: var(--text-muted);
@@ -800,14 +788,8 @@ const handleLogout = async () => {
   .topbar-search-box {
     width: auto;
     flex: 1;
-    padding: 5px 10px;
-  }
-
-  .system-sync-pill {
-    padding: 5px 8px;
-  }
-  .system-sync-pill .sync-text {
-    display: none;
+    height: 34px;
+    padding: 0 10px;
   }
 }
 </style>

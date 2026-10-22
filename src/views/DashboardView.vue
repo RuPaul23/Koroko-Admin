@@ -467,10 +467,33 @@ const syncData = () => {
 @media (max-width: 1024px) {
   .dashboard-columns {
     grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .dash-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 }
 
 @media (max-width: 640px) {
+  .dashboard-page {
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .dash-card {
+    padding: 16px 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
@@ -495,6 +518,19 @@ const syncData = () => {
   .metrics-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .vendor-row {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .v-name {
+    font-size: 12.5px;
+  }
+
+  .banner-design-link {
+    padding: 14px;
   }
 }
 </style>

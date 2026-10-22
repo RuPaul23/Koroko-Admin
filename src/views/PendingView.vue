@@ -3,7 +3,6 @@
     <div class="page-header">
       <div>
         <h1 class="page-title font-display">PENDING FULFILLMENT QUEUE</h1>
-        <p class="page-subtitle">Paid customer orders awaiting Printrove sync, print artwork verification, or dispatch</p>
       </div>
 
       <div class="batch-actions">
@@ -15,7 +14,6 @@
 
     <!-- Alert Banner -->
     <div v-if="pendingOrders.length > 0" class="attention-banner">
-      <div class="banner-icon">⚠️</div>
       <div class="banner-text">
         <strong>{{ pendingOrders.length }} orders requiring fulfillment.</strong> Customer payments are confirmed by Razorpay. Click "Push to Printrove" or resolve print files to start production.
       </div>
