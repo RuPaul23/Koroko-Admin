@@ -16,9 +16,9 @@
         </div>
       </div>
 
-      <!-- Navigation Links -->
+      <!-- Navigation Links: 5 Core Modules -->
       <nav class="sidebar-nav">
-        <div class="nav-section-label">OPERATIONS</div>
+        <div class="nav-section-label font-tech">MANAGEMENT</div>
 
         <router-link to="/" class="nav-item" active-class="active" exact>
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -30,6 +30,16 @@
           <span class="nav-label">Dashboard</span>
         </router-link>
 
+        <router-link to="/products" class="nav-item" active-class="active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-width="2"/>
+            <line x1="3" y1="6" x2="21" y2="6" stroke-width="2"/>
+            <path d="M16 10a4 4 0 0 1-8 0" stroke-width="2"/>
+          </svg>
+          <span class="nav-label">Product</span>
+          <span class="nav-count">{{ adminStore.products.length }}</span>
+        </router-link>
+
         <router-link to="/orders" class="nav-item" active-class="active">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" stroke-width="2"/>
@@ -37,7 +47,7 @@
             <circle cx="5.5" cy="18.5" r="2.5" stroke-width="2"/>
             <circle cx="18.5" cy="18.5" r="2.5" stroke-width="2"/>
           </svg>
-          <span class="nav-label">Orders</span>
+          <span class="nav-label">Order</span>
           <span class="nav-count">{{ adminStore.orders.length }}</span>
         </router-link>
 
@@ -47,43 +57,7 @@
             <polyline points="12 6 12 12 16 14" stroke-width="2"/>
           </svg>
           <span class="nav-label">Pending</span>
-          <span class="nav-badge alert">{{ pendingCount }}</span>
-        </router-link>
-
-        <router-link to="/vendors" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/>
-            <polyline points="9 22 9 12 15 12 15 22" stroke-width="2"/>
-          </svg>
-          <span class="nav-label">Vendors & POD</span>
-        </router-link>
-
-        <div class="nav-section-label">STUDIO & CATALOG</div>
-
-        <router-link to="/products" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-width="2"/>
-            <line x1="3" y1="6" x2="21" y2="6" stroke-width="2"/>
-            <path d="M16 10a4 4 0 0 1-8 0" stroke-width="2"/>
-          </svg>
-          <span class="nav-label">Products & Categories</span>
-          <span class="nav-count">{{ adminStore.products.length }}</span>
-        </router-link>
-
-        <router-link to="/design-upload" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
-            <polyline points="17 8 12 3 7 8" stroke-width="2"/>
-            <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
-          </svg>
-          <span class="nav-label">T-Shirt Mockup Studio</span>
-        </router-link>
-
-        <router-link to="/pricing" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span class="nav-label">Pricing & Margins</span>
+          <span class="nav-badge alert" v-if="pendingCount > 0">{{ pendingCount }}</span>
         </router-link>
 
         <router-link to="/payments" class="nav-item" active-class="active">
@@ -91,7 +65,26 @@
             <rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke-width="2"/>
             <line x1="1" y1="10" x2="23" y2="10" stroke-width="2"/>
           </svg>
-          <span class="nav-label">Payments & Razorpay</span>
+          <span class="nav-label">Earning</span>
+        </router-link>
+
+        <div class="nav-section-label font-tech mt-2">STUDIO & VENDORS</div>
+
+        <router-link to="/design-upload" class="nav-item sub-nav-item" active-class="active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
+            <polyline points="17 8 12 3 7 8" stroke-width="2"/>
+            <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
+          </svg>
+          <span class="nav-label">+ Drop Mockup Studio</span>
+        </router-link>
+
+        <router-link to="/vendors" class="nav-item sub-nav-item" active-class="active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/>
+            <polyline points="9 22 9 12 15 12 15 22" stroke-width="2"/>
+          </svg>
+          <span class="nav-label">Vendors & Sync</span>
         </router-link>
       </nav>
 
@@ -109,7 +102,7 @@
         <div class="user-profile-strip">
           <div class="avatar-circle">AD</div>
           <div class="user-info">
-            <div class="user-name">Director</div>
+            <div class="user-name font-semibold">Director</div>
             <div class="user-role">{{ authState.user?.email || 'admin@koroko.in' }}</div>
           </div>
           <button @click="handleLogout" title="Logout" class="logout-btn">
@@ -126,24 +119,46 @@
     <!-- Main Container -->
     <div class="admin-main">
       <header v-if="!isLoginPage" class="admin-topbar">
-        <div class="topbar-search">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
-            <circle cx="11" cy="11" r="8" stroke-width="2"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"/>
-          </svg>
-          <input type="text" placeholder="Search orders, Printrove items, SKUs, or customer..." />
+        <!-- Mobile Brand Logo Header -->
+        <div class="topbar-left">
+          <div class="mobile-brand-title">
+            <span class="mobile-logo font-display">K</span>
+            <span class="mobile-brand-name font-display">KOROKO ADMIN</span>
+          </div>
+
+          <!-- Top Navigation Tabs (Dashboard, Product, Order, Pending, Earning) -->
+          <div class="topbar-nav-links">
+            <router-link to="/" class="top-nav-btn font-tech" active-class="active" exact>
+              DASHBOARD
+            </router-link>
+            <router-link to="/products" class="top-nav-btn font-tech" active-class="active">
+              PRODUCT ({{ adminStore.products.length }})
+            </router-link>
+            <router-link to="/orders" class="top-nav-btn font-tech" active-class="active">
+              ORDER ({{ adminStore.orders.length }})
+            </router-link>
+            <router-link to="/pending" class="top-nav-btn font-tech" active-class="active">
+              PENDING
+              <span v-if="pendingCount > 0" class="top-pill-badge">{{ pendingCount }}</span>
+            </router-link>
+            <router-link to="/payments" class="top-nav-btn font-tech" active-class="active">
+              EARNING
+            </router-link>
+          </div>
         </div>
 
         <div class="topbar-actions">
-          <div class="system-sync-pill">
+          <div class="system-sync-pill font-tech">
             <span class="sync-dot"></span>
-            <span>Printrove Merchant #300632 Synced</span>
+            <span>Printrove & Qikink Synced</span>
           </div>
-          <button class="topbar-icon-btn" title="Sync Live Products">
+          <a href="https://koroko.in" target="_blank" class="topbar-icon-btn" title="View Live Customer Store">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" stroke-width="2"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke-width="2"/>
+              <polyline points="15 3 21 3 21 9" stroke-width="2"/>
+              <line x1="10" y1="14" x2="21" y2="3" stroke-width="2"/>
             </svg>
-          </button>
+          </a>
         </div>
       </header>
 
@@ -151,6 +166,65 @@
       <main class="admin-content-view">
         <router-view />
       </main>
+
+      <!-- Mobile Bottom Navigation Bar (Dashboard, Product, Order, Pending, Earning) matching reference -->
+      <nav v-if="!isLoginPage" class="mobile-bottom-navbar">
+        <router-link to="/" class="mobile-bottom-item" active-class="active" exact>
+          <div class="m-icon-wrap">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="m-label font-tech">Dashboard</span>
+        </router-link>
+
+        <router-link to="/products" class="mobile-bottom-item" active-class="active">
+          <div class="m-icon-wrap">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-width="2"/>
+              <line x1="3" y1="6" x2="21" y2="6" stroke-width="2"/>
+              <path d="M16 10a4 4 0 0 1-8 0" stroke-width="2"/>
+            </svg>
+            <span class="m-count">{{ adminStore.products.length }}</span>
+          </div>
+          <span class="m-label font-tech">Product</span>
+        </router-link>
+
+        <!-- Center Highlight: Drop/Orders -->
+        <router-link to="/orders" class="mobile-bottom-item highlight" active-class="active">
+          <div class="m-icon-center">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor">
+              <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1" stroke-width="2"/>
+              <path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4" stroke-width="2"/>
+              <circle cx="5.5" cy="18.5" r="2.5" stroke-width="2"/>
+              <circle cx="18.5" cy="18.5" r="2.5" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="m-label font-tech">Order</span>
+        </router-link>
+
+        <router-link to="/pending" class="mobile-bottom-item" active-class="active">
+          <div class="m-icon-wrap">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2"/>
+              <polyline points="12 6 12 12 16 14" stroke-width="2"/>
+            </svg>
+            <span v-if="pendingCount > 0" class="m-badge-dot"></span>
+          </div>
+          <span class="m-label font-tech">Pending</span>
+        </router-link>
+
+        <router-link to="/payments" class="mobile-bottom-item" active-class="active">
+          <div class="m-icon-wrap">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke-width="2"/>
+              <line x1="1" y1="10" x2="23" y2="10" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="m-label font-tech">Earning</span>
+        </router-link>
+      </nav>
     </div>
   </div>
 </template>
@@ -197,6 +271,7 @@ const handleLogout = async () => {
   top: 0;
   height: 100vh;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -278,7 +353,6 @@ const handleLogout = async () => {
   letter-spacing: 0.12em;
   color: var(--text-muted);
   padding: 12px 10px 6px;
-  font-family: var(--font-mono-tech);
 }
 
 .nav-item {
@@ -301,6 +375,14 @@ const handleLogout = async () => {
   color: #ffffff;
   border-left: 3px solid #ffffff;
   font-weight: 600;
+}
+
+.sub-nav-item {
+  font-size: 12px;
+  opacity: 0.75;
+}
+.sub-nav-item:hover, .sub-nav-item.active {
+  opacity: 1;
 }
 
 .nav-icon {
@@ -382,7 +464,6 @@ const handleLogout = async () => {
 }
 .user-name {
   font-size: 12.5px;
-  font-weight: 600;
 }
 .user-role {
   font-size: 10.5px;
@@ -407,59 +488,115 @@ const handleLogout = async () => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
 }
 
 .admin-topbar {
-  height: var(--header-height);
+  min-height: var(--header-height);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 12px 24px;
   background: var(--bg-pitch);
   position: sticky;
   top: 0;
   z-index: 90;
+  gap: 16px;
 }
 
-.topbar-search {
+.topbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  padding: 8px 16px;
-  width: 400px;
+  gap: 24px;
+  overflow-x: auto;
 }
-.topbar-search input {
-  background: transparent;
-  border: none;
-  outline: none;
+
+.mobile-brand-title {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-logo {
+  width: 28px;
+  height: 28px;
+  background: #ffffff;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  border-radius: 4px;
+}
+.mobile-brand-name {
   font-size: 13px;
-  width: 100%;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  white-space: nowrap;
 }
-.topbar-search svg {
-  color: var(--text-muted);
+
+/* Topbar 5-Item Navigation */
+.topbar-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-ultra-subtle);
+}
+
+.top-nav-btn {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-nav-btn:hover {
+  color: #ffffff;
+  background: var(--bg-surface);
+}
+
+.top-nav-btn.active {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
+}
+
+.top-pill-badge {
+  background: var(--accent-brand);
+  color: #ffffff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 999px;
 }
 
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .system-sync-pill {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  font-family: var(--font-mono-tech);
+  font-size: 11px;
   color: var(--text-muted);
   background: var(--bg-surface);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-ultra-subtle);
+  white-space: nowrap;
 }
 .sync-dot {
   width: 6px;
@@ -487,7 +624,126 @@ const handleLogout = async () => {
 
 .admin-content-view {
   flex: 1;
-  padding: 32px;
+  padding: 24px;
   overflow-y: auto;
+}
+
+/* Mobile Bottom Navigation Bar (Dashboard, Product, Order, Pending, Earning) */
+.mobile-bottom-navbar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(10, 10, 14, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 999;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+}
+
+.mobile-bottom-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.mobile-bottom-item .m-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-bottom-item .m-count {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  color: #ffffff;
+}
+
+.mobile-bottom-item .m-badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent-brand);
+  border-radius: 50%;
+}
+
+.mobile-bottom-item.active {
+  color: #ffffff;
+}
+
+.mobile-bottom-item.active .m-label {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mobile-bottom-item.highlight .m-icon-center {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+  margin-top: -16px;
+  transition: transform 0.2s;
+}
+
+.mobile-bottom-item.highlight.active .m-icon-center {
+  transform: scale(1.06);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .mobile-brand-title {
+    display: flex;
+  }
+
+  .topbar-nav-links {
+    display: none;
+  }
+
+  .mobile-bottom-navbar {
+    display: flex;
+  }
+
+  .admin-content-view {
+    padding: 16px 14px 80px 14px;
+  }
+
+  .admin-topbar {
+    padding: 12px 16px;
+  }
+
+  .system-sync-pill span:last-child {
+    display: none;
+  }
 }
 </style>

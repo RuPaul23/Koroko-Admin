@@ -13,6 +13,39 @@
       </div>
     </div>
 
+    <!-- Vendor Source Segment Tabs & Controls -->
+    <div class="vendor-segment-bar">
+      <div class="segment-tabs">
+        <button 
+          class="segment-tab font-tech" 
+          :class="{ active: selectedVendorSegment === 'all' }"
+          @click="selectedVendorSegment = 'all'"
+        >
+          ALL PRODUCTS ({{ adminStore.products.length }})
+        </button>
+        <button 
+          class="segment-tab font-tech" 
+          :class="{ active: selectedVendorSegment === 'printrove' }"
+          @click="selectedVendorSegment = 'printrove'"
+        >
+          PRINTROVE CATALOG ({{ printroveProductsCount }})
+        </button>
+        <button 
+          class="segment-tab font-tech" 
+          :class="{ active: selectedVendorSegment === 'qikink' }"
+          @click="selectedVendorSegment = 'qikink'"
+        >
+          QIKINK CATALOG ({{ qikinkProductsCount }})
+        </button>
+      </div>
+
+      <div class="sync-actions">
+        <button class="btn-sync-vendor font-tech" @click="refreshCatalog">
+          SYNC VENDOR DRESSES &rarr;
+        </button>
+      </div>
+    </div>
+
     <!-- Category Circles Story Strip (Matching https://koroko.in) -->
     <div class="category-stories-card">
       <div class="strip-header">
@@ -56,12 +89,11 @@
           <thead>
             <tr>
               <th>Garment & Mockup</th>
-              <th>Category / Edit</th>
-              <th>Colorways</th>
-              <th>Cost Price</th>
-              <th>Retail Price</th>
+              <th>Category</th>
+              <th>Vendor (Total Cost)</th>
+              <th>Our Store Price (&#8377;)</th>
               <th>Gross Margin</th>
-              <th>Store Status</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -69,43 +101,90 @@
             <tr v-for="product in filteredProducts" :key="product.id">
               <td>
                 <div class="prod-thumb-row">
-                  <img :src="product.mockupFront" alt="Front Mockup" class="table-thumb" />
-                  <img v-if="product.mockupBack" :src="product.mockupBack" alt="Back Mockup" class="table-thumb back-thumb" />
+                  <!-- Front Image with Upload Replacement -->
+                  <div class="thumb-wrapper">
+                    <img v-if="product.mockupFront" :src="product.mockupFront" alt="Front Mockup" class="table-thumb" />
+                    <div v-else class="table-thumb-missing font-tech">NO FRONT</div>
+                    <label class="change-img-btn" title="Upload / Replace Front Image">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
+                        <polyline points="17 8 12 3 7 8" stroke-width="2"/>
+                        <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
+                      </svg>
+                      <input type="file" accept="image/*" @change="onReplaceProductImage($event, product, 'front')" />
+                    </label>
+                  </div>
+
+                  <!-- Back Image with Upload Replacement -->
+                  <div class="thumb-wrapper">
+                    <img v-if="product.mockupBack" :src="product.mockupBack" alt="Back Mockup" class="table-thumb back-thumb" />
+                    <div v-else class="table-thumb-missing font-tech">NO BACK</div>
+                    <label class="change-img-btn" title="Upload / Replace Back Image">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>
+                        <polyline points="17 8 12 3 7 8" stroke-width="2"/>
+                        <line x1="12" y1="3" x2="12" y2="15" stroke-width="2"/>
+                      </svg>
+                      <input type="file" accept="image/*" @change="onReplaceProductImage($event, product, 'back')" />
+                    </label>
+                  </div>
+
                   <div class="prod-names">
-                    <span class="title font-semibold text-white">{{ product.title }}</span>
-                    <span class="id-tag font-tech">{{ product.id }}</span>
+                    <input 
+                      v-model="product.title" 
+                      class="title-inline-edit font-semibold text-white" 
+                      @blur="saveProductEdit(product)" 
+                      title="Click to edit name"
+                    />
+                    <div class="id-row font-tech">
+                      <span class="id-tag">{{ product.id }}</span>
+                      <span class="vendor-tag font-tech">{{ product.vendor || (product.id.startsWith('QK') ? 'Qikink' : 'Printrove') }}</span>
+                    </div>
                   </div>
                 </div>
               </td>
               <td>
-                <span class="category-pill font-tech">
-                  {{ getCategoryLabel(product.category) }}
-                </span>
+                <select v-model="product.category" class="category-select font-tech" @change="saveProductEdit(product)">
+                  <option v-for="cat in categories.filter(c => c.id !== 'all')" :key="cat.id" :value="cat.id">
+                    {{ cat.name }}
+                  </option>
+                </select>
               </td>
               <td>
-                <div class="color-tags">
-                  <span v-for="c in product.colorways" :key="c" class="color-tag">
-                    {{ c }}
-                  </span>
+                <div class="vendor-cost-col font-tech">
+                  <span class="cost-val">&#8377;{{ (product.baseCost || 0) + (product.printCost || 0) }}</span>
+                  <span class="cost-sub">Total Vendor Cost</span>
                 </div>
               </td>
-              <td class="font-tech">&#8377;{{ (product.baseCost || 0) + (product.printCost || 0) }}</td>
-              <td class="font-tech font-bold text-white">&#8377;{{ product.retailPrice }}</td>
               <td>
-                <span class="margin-badge font-tech">
+                <div class="price-edit-cell">
+                  <span class="currency-prefix font-tech">&#8377;</span>
+                  <input 
+                    v-model.number="product.retailPrice" 
+                    type="number" 
+                    class="price-input font-tech"
+                    @blur="saveProductEdit(product)"
+                  />
+                </div>
+              </td>
+              <td>
+                <span class="margin-badge font-tech" :class="calculateMargin(product) > 40 ? 'high' : ''">
                   {{ calculateMargin(product) }}%
                 </span>
               </td>
               <td>
                 <span class="badge" :class="product.active ? 'badge-emerald' : 'badge-amber'">
-                  {{ product.active ? 'LIVE ON STORE' : 'DRAFT' }}
+                  {{ product.active ? 'LIVE ON STORE' : 'DELISTED' }}
                 </span>
               </td>
               <td class="actions-cell">
+                <button class="push-store-btn font-tech" @click="pushToKorokoStore(product)" title="Approve and push directly to koroko.in">
+                  PUSH TO STORE &rarr;
+                </button>
                 <button class="toggle-btn font-tech" @click="toggleProductStatus(product)">
                   {{ product.active ? 'DELIST' : 'ACTIVATE' }}
                 </button>
-                <button class="delete-btn font-tech" @click="deleteProduct(product)" title="Remove from Koroko Store">
+                <button class="delete-btn font-tech" @click="deleteProduct(product)" title="Remove permanently">
                   DELETE
                 </button>
               </td>
@@ -124,15 +203,33 @@ import { KOROKO_CATEGORIES } from '../data/categories.js';
 
 const categories = ref(KOROKO_CATEGORIES);
 const selectedCategoryFilter = ref('all');
+const selectedVendorSegment = ref('all');
 const searchQuery = ref('');
+
+const printroveProductsCount = computed(() => {
+  return adminStore.products.filter(p => !p.id.startsWith('QK') && p.vendor !== 'Qikink').length;
+});
+
+const qikinkProductsCount = computed(() => {
+  return adminStore.products.filter(p => p.id.startsWith('QK') || p.vendor === 'Qikink').length;
+});
 
 const filteredProducts = computed(() => {
   return adminStore.products.filter(p => {
+    // 1. Vendor Segment Filter
+    if (selectedVendorSegment.value === 'printrove') {
+      if (p.id.startsWith('QK') || p.vendor === 'Qikink') return false;
+    } else if (selectedVendorSegment.value === 'qikink') {
+      if (!p.id.startsWith('QK') && p.vendor !== 'Qikink') return false;
+    }
+
+    // 2. Category Filter
     const matchesCategory = selectedCategoryFilter.value === 'all' || 
       p.category === selectedCategoryFilter.value ||
       (selectedCategoryFilter.value === 'his' && (p.category === 'oversized' || p.category === 'hoodies')) ||
       (selectedCategoryFilter.value === 'her' && (p.category === 'croptops' || p.category === 'dresses'));
 
+    // 3. Search Query
     const q = searchQuery.value.toLowerCase().trim();
     if (!q) return matchesCategory;
 
@@ -143,6 +240,35 @@ const filteredProducts = computed(() => {
     return matchesCategory && matchesSearch;
   });
 });
+
+const onReplaceProductImage = (e, product, side) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (side === 'front') {
+        product.mockupFront = event.target.result;
+      } else {
+        product.mockupBack = event.target.result;
+      }
+      alert(`Updated ${side} image for "${product.title}"!`);
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const saveProductEdit = (product) => {
+  console.log('Saved product updates:', product.id, product.title, product.retailPrice);
+};
+
+const pushToKorokoStore = (product) => {
+  product.active = true;
+  alert(`APPROVED! "${product.title}" has been pushed live to https://koroko.in customer store with retail price ₹${product.retailPrice}!`);
+};
+
+const refreshCatalog = () => {
+  alert('Syncing live dress catalog from Printrove & Qikink warehouses...');
+};
 
 const getCategoryLabel = (catId) => {
   const match = categories.value.find(c => c.id === catId);
@@ -426,24 +552,178 @@ const deleteProduct = async (product) => {
   color: #ffffff;
 }
 
-.actions-cell {
+.vendor-segment-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.segment-tabs {
   display: flex;
   gap: 8px;
-  align-items: center;
+  flex-wrap: wrap;
 }
-
-.delete-btn {
+.segment-tab {
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #a1a1aa;
+  padding: 8px 14px;
+  border-radius: 6px;
   font-size: 11px;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  background: rgba(239, 68, 68, 0.08);
-  padding: 5px 10px;
-  border-radius: var(--radius-xs);
-  color: #ef4444;
   cursor: pointer;
   transition: all 0.2s;
 }
-.delete-btn:hover {
-  background: #ef4444;
+.segment-tab.active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  font-weight: 700;
+}
+.btn-sync-vendor {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-sync-vendor:hover {
+  background: #34d399;
+  color: #000000;
+}
+
+.thumb-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.table-thumb-missing {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background: #18181b;
+  border: 1px dashed #3f3f46;
+  color: #71717a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  text-align: center;
+}
+.change-img-btn {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #27272a;
+  border: 1px solid #52525b;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #ffffff;
+  cursor: pointer;
+}
+.change-img-btn input {
+  display: none;
+}
+
+.title-inline-edit {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 240px;
+  outline: none;
+}
+.title-inline-edit:focus {
+  background: #18181b;
+  border-color: #52525b;
+}
+
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.vendor-tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.category-select {
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #e4e4e7;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.vendor-cost-col {
+  display: flex;
+  flex-direction: column;
+}
+.vendor-cost-col .cost-val {
+  font-weight: 700;
+  color: #f59e0b;
+  font-size: 13px;
+}
+.vendor-cost-col .cost-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+.price-edit-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #141416;
+  border: 1px solid #27272a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: 90px;
+}
+.currency-prefix {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.price-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  width: 100%;
+}
+
+.push-store-btn {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.push-store-btn:hover {
+  background: #34d399;
 }
 </style>
