@@ -329,6 +329,7 @@ const initiateRefund = (tx) => {
 
 .luxury-table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;
@@ -341,6 +342,10 @@ const initiateRefund = (tx) => {
   letter-spacing: 0.08em;
   border-bottom: 1px solid var(--border-ultra-subtle);
   font-family: var(--font-mono-tech);
+  position: sticky;
+  top: 0;
+  background: #121217;
+  z-index: 5;
 }
 .luxury-table td {
   padding: 14px;

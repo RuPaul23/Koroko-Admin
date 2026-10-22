@@ -61,8 +61,7 @@ html, body {
   background-color: var(--bg-pitch);
   color: var(--text-white);
   font-family: var(--font-body);
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100%;
   -webkit-font-smoothing: antialiased;
 }
 

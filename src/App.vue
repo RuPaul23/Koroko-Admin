@@ -244,11 +244,14 @@ const handleLogout = async () => {
 <style scoped>
 .koroko-admin-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--bg-pitch);
 }
 .koroko-admin-layout.auth-view {
   display: block;
+  height: auto;
+  overflow: auto;
 }
 
 /* Sidebar */
@@ -258,11 +261,10 @@ const handleLogout = async () => {
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
   height: 100vh;
   z-index: 100;
   flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .sidebar-header {
@@ -478,20 +480,23 @@ const handleLogout = async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   min-width: 0;
+  overflow: hidden;
   position: relative;
 }
 
 .admin-topbar {
-  min-height: var(--header-height);
+  height: var(--header-height);
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-  background: var(--bg-pitch);
-  position: sticky;
-  top: 0;
+  background: rgba(8, 8, 10, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   z-index: 90;
   gap: 16px;
 }
@@ -749,6 +754,18 @@ const handleLogout = async () => {
 
 /* Responsive Breakpoints */
 @media (max-width: 900px) {
+  .koroko-admin-layout {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .admin-main {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
   .admin-sidebar {
     display: none;
   }
@@ -777,6 +794,7 @@ const handleLogout = async () => {
 
   .admin-content-view {
     padding: 70px 14px 80px 14px;
+    overflow: visible;
   }
 
   .topbar-brand {
