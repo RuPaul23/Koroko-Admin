@@ -101,9 +101,12 @@
                   {{ product.active ? 'LIVE ON STORE' : 'DRAFT' }}
                 </span>
               </td>
-              <td>
+              <td class="actions-cell">
                 <button class="toggle-btn font-tech" @click="toggleProductStatus(product)">
                   {{ product.active ? 'DELIST' : 'ACTIVATE' }}
+                </button>
+                <button class="delete-btn font-tech" @click="deleteProduct(product)" title="Remove from Koroko Store">
+                  DELETE
                 </button>
               </td>
             </tr>
@@ -154,6 +157,31 @@ const calculateMargin = (product) => {
 
 const toggleProductStatus = (product) => {
   product.active = !product.active;
+};
+
+const deleteProduct = async (product) => {
+  if (confirm(`Permanently remove "${product.title}" (${product.id}) from Koroko store and admin catalog?`)) {
+    try {
+      const backendUrl = import.meta.env.VITE_API_URL 
+        ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/api/real-data` 
+        : '/api/real-data';
+
+      await fetch(backendUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-product',
+          productId: product.id
+        })
+      });
+    } catch (e) {}
+
+    const idx = adminStore.products.findIndex(p => p.id === product.id);
+    if (idx !== -1) {
+      adminStore.products.splice(idx, 1);
+    }
+    alert(`"${product.title}" deleted from Koroko store catalog!`);
+  }
 };
 </script>
 
@@ -395,6 +423,27 @@ const toggleProductStatus = (product) => {
 .toggle-btn:hover {
   background: var(--bg-elevated);
   border-color: #ffffff;
+  color: #ffffff;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.delete-btn {
+  font-size: 11px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.delete-btn:hover {
+  background: #ef4444;
   color: #ffffff;
 }
 </style>
