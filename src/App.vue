@@ -60,6 +60,16 @@
 
         <div class="nav-section-label">STUDIO & CATALOG</div>
 
+        <router-link to="/products" class="nav-item" active-class="active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke-width="2"/>
+            <line x1="3" y1="6" x2="21" y2="6" stroke-width="2"/>
+            <path d="M16 10a4 4 0 0 1-8 0" stroke-width="2"/>
+          </svg>
+          <span class="nav-label">Products & Categories</span>
+          <span class="nav-count">{{ adminStore.products.length }}</span>
+        </router-link>
+
         <router-link to="/design-upload" class="nav-item" active-class="active">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke-width="2"/>

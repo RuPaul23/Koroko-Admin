@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { authState } from '../services/firebase.js';
 
 import DashboardView from '../views/DashboardView.vue';
+import ProductsView from '../views/ProductsView.vue';
 import VendorsView from '../views/VendorsView.vue';
 import OrdersView from '../views/OrdersView.vue';
 import PendingView from '../views/PendingView.vue';
@@ -15,6 +16,12 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: DashboardView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/products',
+    name: 'Products',
+    component: ProductsView,
     meta: { requiresAuth: true }
   },
   {
@@ -70,7 +77,6 @@ export const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  // If navigating to login, allow
   if (to.name === 'Login') {
     if (authState.isAuthenticated) {
       return next({ name: 'Dashboard' });
@@ -78,7 +84,6 @@ router.beforeEach((to, from, next) => {
     return next();
   }
 
-  // Check auth
   if (to.meta.requiresAuth && !authState.isAuthenticated) {
     const localAdmin = sessionStorage.getItem('koroko_admin_authenticated');
     if (localAdmin === 'true') {
